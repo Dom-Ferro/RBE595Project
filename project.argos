@@ -119,20 +119,20 @@ and to get help about a specific entity (for instance, the box)
 
 $ argos3 -q box
   -->
-  <arena size="5, 5, 1" center="0,0,0.5">
+  <arena size="10, 10, 1" center="0,0,0.5">
 
     <!-- Place four boxes in a square to delimit the arena -->
-    <box id="wall_north" size="4,0.1,0.5" movable="false">
-      <body position="0,2,0" orientation="0,0,0" />
+    <box id="wall_north" size="9,0.1,0.5" movable="false">
+      <body position="0,4.5,0" orientation="0,0,0" />
     </box>
-    <box id="wall_south" size="4,0.1,0.5" movable="false">
-      <body position="0,-2,0" orientation="0,0,0" />
+    <box id="wall_south" size="9,0.1,0.5" movable="false">
+      <body position="0,-4.5,0" orientation="0,0,0" />
     </box>
-    <box id="wall_east" size="0.1,4,0.5" movable="false">
-      <body position="2,0,0" orientation="0,0,0" />
+    <box id="wall_east" size="0.1,9,0.5" movable="false">
+      <body position="4.5,0,0" orientation="0,0,0" />
     </box>
-    <box id="wall_west" size="0.1,4,0.5" movable="false">
-      <body position="-2,0,0" orientation="0,0,0" />
+    <box id="wall_west" size="0.1,9,0.5" movable="false">
+      <body position="-4.5,0,0" orientation="0,0,0" />
     </box>
 
     <!--
@@ -145,7 +145,7 @@ $ argos3 -q box
         standard deviation is 360 degrees.
     -->
     <distribute>
-      <position method="uniform" min="-2,-2,0" max="2,2,0" />
+      <position method="uniform" min="0,-4,0" max="4,0,0" />
       <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
       <entity quantity="30" max_trials="100">
         <kheperaiv id="kiv" rab_data_size="100">
@@ -154,6 +154,7 @@ $ argos3 -q box
       </entity>
     </distribute>
     
+    <!--
     <distribute>
       <position method="uniform" min="-2,-2,0" max="2,2,0" />
       <orientation method="uniform" min="0,0,0" max="360,0,0" />
@@ -170,6 +171,7 @@ $ argos3 -q box
         <cylinder id="c" height="0.2" radius="0.15" movable="false" />
       </entity>
     </distribute>
+    -->
 
   </arena>
 
@@ -222,7 +224,7 @@ $ argos3 -q visualizations
       <user_functions label="buzz_qt" />
       <camera>
         <placements>
-          <placement index="0" position="0,0,11" look_at="0,0,0" up="0,1,0" lens_focal_length="65" />
+          <placement index="0" position="0,0,11" look_at="0,0,0" up="0,1,0" lens_focal_length="26" />
           <placement index="1" position="4.42741,3.38215,2.51354" look_at="3.7126,2.81745,2.10105" up="-0.323676,-0.255704,0.910961" lens_focal_length="53.8" />
           <placement index="2" position="4.78486,4.0464,2.7378" look_at="4.08294,3.44453,2.35694" up="-0.289125,-0.247915,0.924632" lens_focal_length="53.75" />
           <placement index="3" position="0.0142988,6.39367,3.96617" look_at="0.0142988,5.54847,3.43172" up="-2.16018e-16,-0.534447,0.845202" lens_focal_length="65" />
