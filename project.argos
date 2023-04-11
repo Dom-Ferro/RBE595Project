@@ -224,7 +224,7 @@ $ argos3 -q visualizations
       <user_functions label="buzz_qt" />
       <camera>
         <placements>
-          <placement index="0" position="0,0,11" look_at="0,0,0" up="0,1,0" lens_focal_length="26" />
+          <placement index="0" position="2.5,-2.5,11" look_at="2.5,-2.5,0" up="0,1,0" lens_focal_length="60" />
           <placement index="1" position="4.42741,3.38215,2.51354" look_at="3.7126,2.81745,2.10105" up="-0.323676,-0.255704,0.910961" lens_focal_length="53.8" />
           <placement index="2" position="4.78486,4.0464,2.7378" look_at="4.08294,3.44453,2.35694" up="-0.289125,-0.247915,0.924632" lens_focal_length="53.75" />
           <placement index="3" position="0.0142988,6.39367,3.96617" look_at="0.0142988,5.54847,3.43172" up="-2.16018e-16,-0.534447,0.845202" lens_focal_length="65" />
