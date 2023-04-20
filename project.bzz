@@ -25,53 +25,90 @@ function init() {
 	# give a seed or all the robots pick the same random number
 	math.rng.setseed(id)
 	c = math.rng.uniform(0,100)
-	# want to practice swarms
-	#flash = swarm.create(1)
-	# add everyone to flash if the count is over T
-	#flash.select(c >= T)
-	# add everyone else to nonflash swarm
-	#nonflash = flash.others(2)
-	# RGB!!!!
-	r = 0
-	g = 255
-	b = 0
+
 	# no magic numbers
 	base_speed = 10.0
 	turning_mod = 0.5
 	lin_mod = 0.1
 	colliding = 0
-	vision = 100 #cm
+	vision = 90 #cm
 	e = 5000
 	desired_dist = 50.0 #cm
 	goal_x = 2.5
 	goal_y = -2.5
+	NUM_ROBOTS = 30
+
+	#grid things
+	bb_dist = 50.0
+	gg_dist = 50.0 * math.sqrt(2)
+	bg_dist = 50.0
 	
-	# write things to the robot 
+	# write things to the rsobot 
 	#set_wheels(base_speed, base_speed)
 	#set_leds(r, g, b)
+
+	blue = swarm.create(1)
+	green = swarm.create(2)
+
+	
+	blue.select(id % 2 == 0)
+	green.select(id % 2 == 1)
+
+	if (blue.in())
+		set_leds(0,0,255)
+	else
+		set_leds(0,255,0)
+
+	turn = 0
+
 }
 
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
 
-	#filter the neighbors "in view"
-	visible = neighbors.filter(function(rid, data) {
-		return data.distance < vision})
+	same_neighbors = neighbors.kin()
+	non_same = neighbors.nonkin()
+	#log(non_same)
 
 	vec = {}
 	vec.x = 0.0
 	vec.y = 0.0
+
+	if (turn == id) {
+		log(non_same)
+		check_switch(same_neighbors, non_same)
+	}
+	turn = turn + 1
+	turn = turn % NUM_ROBOTS
+
 	#calculate the vectors for the attraction/repulsion
-	visible.foreach(function(rid, data) {
-		x = math.cos(data.azimuth)*F(data.distance)
-		y = math.sin(data.azimuth)*F(data.distance)
+	non_same.foreach(function(rid,data) {
+		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
+		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
 
 		vec.x = vec.x + x
 		vec.y = vec.y + y
-	}) 	
+	})
+
+	same_dist = bb_dist
+	if (green.in())
+		same_dist = gg_dist
+
+	same_neighbors.foreach(function(rid,data) {
+		x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
+		y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
+
+		vec.x = vec.x + x
+		vec.y = vec.y + y
+	})
+
+
+
+	
+
 	goal_vec_x = (goal_x - pose.position.x) * 0.01
-	log("vec x: ", vec.x, ", goal vec x: ", goal_vec_x)
+	#log("vec x: ", vec.x, ", goal vec x: ", goal_vec_x)
 	vec.x = vec.x + goal_vec_x
 	goal_vec_y = (goal_y - pose.position.y) * 0.01
 	vec.y = vec.y + goal_vec_y
@@ -95,7 +132,7 @@ function step() {
 
 }
 
-function F(dist) {
+function F(dist, desire, vision) {
 	#factor = (4 * e)/dist
 	#log("dist: ", dist, " desired: ", desired_dist)
 	#first_expo = (desired_dist / dist)^4
@@ -104,9 +141,42 @@ function F(dist) {
 	force = 0.0
 	if (dist < desired_dist)
 		force = -20*((desired_dist/dist)^3)
-	else if (dist > desired_dist)
+	else if ((dist > desired_dist) and (dist < vision))
 		force = dist/desired_dist
 	return force
+}
+
+
+function check_switch(same_neighbors, non_same) {
+	num_same = 0.0
+	num_diff = 0.0
+	log(non_same.count())
+	same_neighbors.foreach(function(rid,data) {
+		if (data.distance < vision)
+			num_same = num_same + 1.0
+	})
+	non_same.foreach(function(rid,data) {
+		log("AAAAAAAAAAA")
+		if (data.distance < vision)
+			num_diff = num_diff + 1.0
+	})
+
+	percent_same = num_same / (num_same + num_diff)
+	debug.print("num same: ", num_same, " num_diff: ", num_diff, "percent_same: ", percent_same)
+
+	if (percent_same > 0.5)
+		if (blue.in()) {
+			blue.leave()
+			green.join()
+		} else {
+			green.leave()
+			blue.join()
+		}
+
+	if (blue.in())
+		set_leds(0,0,255)
+	else
+		set_leds(0,255,0)
 }
 
 # This function is executed when you press the reset button
