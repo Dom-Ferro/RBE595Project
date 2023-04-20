@@ -47,8 +47,8 @@ function init() {
 	#set_wheels(base_speed, base_speed)
 	#set_leds(r, g, b)
 
-	blue = swarm.create(1)
-	green = swarm.create(2)
+	blue = swarm.create(1) # swarm 0
+	green = swarm.create(2) # swarm 1
 
 	
 	blue.select(id % 2 == 0)
@@ -66,42 +66,78 @@ function init() {
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
-
-	same_neighbors = neighbors.kin()
-	non_same = neighbors.nonkin()
-	#log(non_same)
+	same_neighbors = {} # neighbors.kin()
+	non_same = {} # neighbors.nonkin()
+	#log(non_same)	
 
 	vec = {}
 	vec.x = 0.0
 	vec.y = 0.0
+	
+	blue.exec(function() { 
+		set_leds(0,0,255)
+		neighbors.broadcast(string.tostring(id), 0)
+	})
+	
+	green.exec(function() { 
+		set_leds(0,255,0)
+		neighbors.broadcast(string.tostring(id), 1)
+	})
+
+
+	neighbors.foreach(function(rid,data) {
+		if (data.distance < vision){
+			neighbors.listen(rid, function(vid, value, rid){
+				if (value == 0){
+					if (blue.in()){
+						same_neighbors[string.tostring(size(same_neighbors))]= rid
+					}
+					if (green.in()){
+						non_same[string.tostring(size(non_same))]= rid
+					}
+				}
+				if (value == 1){
+					if (green.in()){
+						same_neighbors[string.tostring(size(same_neighbors))]= rid
+					}
+					if (blue.in()){
+						non_same[string.tostring(size(non_same))]= rid
+					}
+				}
+			})
+		}
+	})
 
 	if (turn == id) {
 		log(non_same)
-		check_switch(same_neighbors, non_same)
+		#check_switch(same_neighbors, non_same)
 	}
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
 
 	#calculate the vectors for the attraction/repulsion
-	non_same.foreach(function(rid,data) {
-		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
-		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
+	if (size(non_same)){
+		non_same.foreach(function(index,rid) {
+			data = neighbors.poses[rid]
+			x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
+			y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
 
-		vec.x = vec.x + x
-		vec.y = vec.y + y
-	})
+			vec.x = vec.x + x
+			vec.y = vec.y + y
+		})
+	}
 
 	same_dist = bb_dist
 	if (green.in())
 		same_dist = gg_dist
 
-	same_neighbors.foreach(function(rid,data) {
-		x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
-		y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
+	#same_neighbors.foreach(function(rid,data) {
+	#	x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
+	#	y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
 
-		vec.x = vec.x + x
-		vec.y = vec.y + y
-	})
+	#	vec.x = vec.x + x
+	#	vec.y = vec.y + y
+	#})
 
 
 
@@ -150,15 +186,12 @@ function F(dist, desire, vision) {
 function check_switch(same_neighbors, non_same) {
 	num_same = 0.0
 	num_diff = 0.0
-	log(non_same.count())
 	same_neighbors.foreach(function(rid,data) {
-		if (data.distance < vision)
-			num_same = num_same + 1.0
+		num_same = num_same + 1.0
 	})
-	non_same.foreach(function(rid,data) {
+	non_same.foreach(function(key, rid) {
 		log("AAAAAAAAAAA")
-		if (data.distance < vision)
-			num_diff = num_diff + 1.0
+		num_diff = num_diff + 1.0
 	})
 
 	percent_same = num_same / (num_same + num_diff)
