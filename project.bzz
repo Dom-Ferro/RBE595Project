@@ -30,13 +30,12 @@ function init() {
 	c = math.rng.uniform(0,100)
 
 	# no magic numbers
-	base_speed = 10.0
+	base_speed = 5.0
 	turning_mod = 0.5
 	lin_mod = 0.1
 	colliding = 0
 	vision = 90 #cm
 	e = 5000
-	desired_dist = 50.0 #cm
 	goal_x = 2.5
 	goal_y = -2.5
 	NUM_ROBOTS = 30
@@ -87,24 +86,23 @@ function step() {
 	vec.y = 0.0
 
 	if (turn == id) {
-		log(non_same.poses)
+		#log(non_same.poses)
 		check_switch(same_neighbors, non_same)
 	}
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
 
 	#calculate the vectors for the attraction/repulsion
-	if (size(non_same) > 0){
-		non_same.foreach(function(rid,data) {
-			#log("AAAAAAaaah")
-			#log(neighbors.poses[rid])
-			x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
-			y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
+	non_same.foreach(function(rid,data) {
+		#log("AAAAAAaaah")
+		#log(neighbors.poses[rid])
+		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
+		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
 
-			vec.x = vec.x + x
-			vec.y = vec.y + y
-		})
-	}
+		vec.x = vec.x + x
+		vec.y = vec.y + y
+	})
+
 	
 	
 	same_dist = bb_dist
@@ -123,22 +121,25 @@ function step() {
 
 	
 
-	goal_vec_x = (goal_x - pose.position.x) * 0.01
-	#log("vec x: ", vec.x, ", goal vec x: ", goal_vec_x)
+	goal_vec_x = 1.01 ^(goal_x - pose.position.x)# * 0.5
+	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 	vec.x = vec.x + goal_vec_x
-	goal_vec_y = (goal_y - pose.position.y) * 0.01
+	goal_vec_y =  1.01 ^(goal_y - pose.position.y)# * 0.5
 	vec.y = vec.y + goal_vec_y
+	
+	log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
 
 	sx = vec.x
 	sy = vec.y
-	if (vecsum > base_speed) {
+	
+	log("sx: ", sx, "sy: ", sy)
+	if ((vecsum > base_speed) and (0 == 1)) {
 		sx = (vec.x / vecsum) * base_speed
 		sy = (vec.y / vecsum) * base_speed
 	}
-
 	
 
 	#move along the vector
@@ -216,10 +217,19 @@ function F(dist, desire, vision) {
 	#second_expo = (desired_dist / dist)^2
 	#force = factor * (first_expo - second_expo)
 	force = 0.0
-	if (dist < desired_dist)
-		force = -20*((desired_dist/dist)^3)
-	else if ((dist > desired_dist) and (dist < vision))
-		force = dist/desired_dist
+	band = 2.5
+	alpha_attract = 1.01
+	alpha_repulse = 0.7
+	if (dist < desire - band) {
+		force = (alpha_repulse^((dist - desire)))
+		force = -2*force
+	}
+	else if ((dist > desire + band) and (dist < vision)){
+		force = alpha_attract^((dist - desire))
+		force = force
+	}
+	else
+		force = 0.0
 	return force
 }
 
@@ -235,9 +245,9 @@ function check_switch(same_neighbors, non_same) {
 	})
 
 	percent_same = num_same / (num_same + num_diff)
-	debug.print("num same: ", num_same, " num_diff: ", num_diff, "percent_same: ", percent_same)
+	#debug.print("num same: ", num_same, " num_diff: ", num_diff, "percent_same: ", percent_same)
 
-	if (percent_same > 0.5)
+	if ((percent_same > 0.5) and ((num_same + num_diff) > 5) and ((num_same + num_diff) < 7) )
 		switch_swarm()
 }
 

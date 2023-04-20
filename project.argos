@@ -134,6 +134,14 @@ $ argos3 -q box
     <box id="wall_west" size="0.1,9,0.5" movable="false">
       <body position="-4.5,0,0" orientation="0,0,0" />
     </box>
+	
+    <light id ="light" 
+      position="2.5,-2.5,0.5" 
+      orientation="0,0,0"
+      color="yellow"
+      intensity="1"
+      medium="leds"
+    />
 
     <!--
         You can distribute entities randomly. Here, we distribute
@@ -145,7 +153,7 @@ $ argos3 -q box
         standard deviation is 360 degrees.
     -->
     <distribute>
-      <position method="uniform" min="0,-4,0" max="4,0,0" />
+      <position method="uniform" min="0,-3.5,0" max="3.5,0,0" />
       <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
       <entity quantity="30" max_trials="100">
         <kheperaiv id="kiv" rab_data_size="100">
