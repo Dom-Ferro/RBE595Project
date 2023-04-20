@@ -22,6 +22,9 @@ function init() {
 	
 	T = 100
 	k = 0.4
+	
+	GREEN = 1
+	BLUE = 0
 	# give a seed or all the robots pick the same random number
 	math.rng.setseed(id)
 	c = math.rng.uniform(0,100)
@@ -61,64 +64,40 @@ function init() {
 
 	turn = 0
 
+	same_neighbors = {} # neighbors.kin()
+	non_same = {} # neighbors.nonkin()
+ 	friends = {}
+	listener()
+
 }
 
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
-	same_neighbors = {} # neighbors.kin()
-	non_same = {} # neighbors.nonkin()
+	same_neighbors = get_kin() # neighbors.kin()
+	non_same = get_nonkin() # neighbors.nonkin()
 	#log(non_same)	
+	green.exec(function(){
+		neighbors.broadcast(string.tostring(id),  GREEN)})
+	blue.exec(function(){
+		neighbors.broadcast(string.tostring(id),  BLUE)})
 
 	vec = {}
 	vec.x = 0.0
 	vec.y = 0.0
-	
-	blue.exec(function() { 
-		set_leds(0,0,255)
-		neighbors.broadcast(string.tostring(id), 0)
-	})
-	
-	green.exec(function() { 
-		set_leds(0,255,0)
-		neighbors.broadcast(string.tostring(id), 1)
-	})
-
-
-	neighbors.foreach(function(rid,data) {
-		if (data.distance < vision){
-			neighbors.listen(rid, function(vid, value, rid){
-				if (value == 0){
-					if (blue.in()){
-						same_neighbors[string.tostring(size(same_neighbors))]= rid
-					}
-					if (green.in()){
-						non_same[string.tostring(size(non_same))]= rid
-					}
-				}
-				if (value == 1){
-					if (green.in()){
-						same_neighbors[string.tostring(size(same_neighbors))]= rid
-					}
-					if (blue.in()){
-						non_same[string.tostring(size(non_same))]= rid
-					}
-				}
-			})
-		}
-	})
 
 	if (turn == id) {
-		log(non_same)
-		#check_switch(same_neighbors, non_same)
+		log(non_same.poses)
+		check_switch(same_neighbors, non_same)
 	}
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
 
 	#calculate the vectors for the attraction/repulsion
-	if (size(non_same)){
-		non_same.foreach(function(index,rid) {
-			data = neighbors.poses[rid]
+	if (size(non_same) > 0){
+		non_same.foreach(function(rid,data) {
+			#log("AAAAAAaaah")
+			#log(neighbors.poses[rid])
 			x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
 			y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
 
@@ -126,18 +105,19 @@ function step() {
 			vec.y = vec.y + y
 		})
 	}
-
+	
+	
 	same_dist = bb_dist
 	if (green.in())
 		same_dist = gg_dist
 
-	#same_neighbors.foreach(function(rid,data) {
-	#	x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
-	#	y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
+	same_neighbors.foreach(function(rid,data) {
+		x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
+		y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
 
-	#	vec.x = vec.x + x
-	#	vec.y = vec.y + y
-	#})
+		vec.x = vec.x + x
+		vec.y = vec.y + y
+	})
 
 
 
@@ -168,6 +148,67 @@ function step() {
 
 }
 
+function get_nonkin(){
+	nearby = neighbors.filter(function(rid, data){
+		return data.distance < vision})
+	
+	return nearby.filter(function(rid, data){
+		return friends[string.tostring(rid)] != friends[string.tostring(id)] 
+	})
+}
+
+function get_kin(){
+	nearby = neighbors.filter(function(rid, data){
+		return data.distance < vision})
+	
+	return nearby.filter(function(rid, data){
+		return friends[string.tostring(rid)] == friends[string.tostring(id)] 
+	})
+}
+
+function switch_swarm(){
+	if(blue.in()){
+		blue.leave()
+		green.join()
+		neighbors.broadcast(string.tostring(id), GREEN)
+		friends[string.tostring(id)] = GREEN
+		set_leds(0, 255, 0)
+	}
+	else if(green.in()){
+		green.leave()
+		blue.join()
+		neighbors.broadcast(string.tostring(id), BLUE)
+		friends[string.tostring(id)] = BLUE
+		set_leds(0, 0, 255)
+	}
+	else {
+		log("uh oh, spaghettios, :-O")
+		set_leds(255, 0, 0)
+	}
+	
+}
+
+function listener(){
+	x = 0
+	while(x<30) {
+		#if (data.distance < vision){
+			neighbors.listen(string.tostring(x), function(vid, value, rid){
+				friends[string.tostring(rid)] = value
+			})
+		x = x + 1
+		#}
+	}
+	if (blue.in()) {
+		friends[string.tostring(id)] = BLUE
+	} 
+	else if (green.in()) {
+		friends[string.tostring(id)] = GREEN
+	} 
+	else {
+		friends[string.tostring(id)] = 3
+	}
+}
+
 function F(dist, desire, vision) {
 	#factor = (4 * e)/dist
 	#log("dist: ", dist, " desired: ", desired_dist)
@@ -189,8 +230,7 @@ function check_switch(same_neighbors, non_same) {
 	same_neighbors.foreach(function(rid,data) {
 		num_same = num_same + 1.0
 	})
-	non_same.foreach(function(key, rid) {
-		log("AAAAAAAAAAA")
+	non_same.foreach(function(rid, data) {
 		num_diff = num_diff + 1.0
 	})
 
@@ -198,18 +238,7 @@ function check_switch(same_neighbors, non_same) {
 	debug.print("num same: ", num_same, " num_diff: ", num_diff, "percent_same: ", percent_same)
 
 	if (percent_same > 0.5)
-		if (blue.in()) {
-			blue.leave()
-			green.join()
-		} else {
-			green.leave()
-			blue.join()
-		}
-
-	if (blue.in())
-		set_leds(0,0,255)
-	else
-		set_leds(0,255,0)
+		switch_swarm()
 }
 
 # This function is executed when you press the reset button
