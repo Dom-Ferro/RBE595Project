@@ -66,6 +66,8 @@ function init() {
 	same_neighbors = {} # neighbors.kin()
 	non_same = {} # neighbors.nonkin()
  	friends = {}
+	switch_count = 0
+	switch_thresh = 100
 	listener()
 
 }
@@ -85,10 +87,17 @@ function step() {
 	vec.x = 0.0
 	vec.y = 0.0
 
-	if (turn == id) {
+	#if (turn == id) {
 		#log(non_same.poses)
-		check_switch(same_neighbors, non_same)
+		#check_switch(same_neighbors, non_same)
+	#}
+	# debug.print(switch_count)
+	debug.print(switch_count)
+	if(switch_count > switch_thresh){
+		switch_swarm()
+		switch_count = 0
 	}
+	
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
 
@@ -117,8 +126,6 @@ function step() {
 		vec.y = vec.y + y
 	})
 
-
-
 	
 
 	goal_vec_x = 1.01 ^(goal_x - pose.position.x)# * 0.5
@@ -127,7 +134,7 @@ function step() {
 	goal_vec_y =  1.01 ^(goal_y - pose.position.y)# * 0.5
 	vec.y = vec.y + goal_vec_y
 	
-	log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
+	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
@@ -135,7 +142,7 @@ function step() {
 	sx = vec.x
 	sy = vec.y
 	
-	log("sx: ", sx, "sy: ", sy)
+	#log("sx: ", sx, "sy: ", sy)
 	if ((vecsum > base_speed) and (0 == 1)) {
 		sx = (vec.x / vecsum) * base_speed
 		sy = (vec.y / vecsum) * base_speed
@@ -146,25 +153,30 @@ function step() {
 	gotoc(sx, sy)
 		#scale the vector?
 
+	look_at_neighbors(same_neighbors, non_same)
 
 }
 
 function get_nonkin(){
-	nearby = neighbors.filter(function(rid, data){
-		return data.distance < vision})
-	
+	nearby = near()
+
 	return nearby.filter(function(rid, data){
 		return friends[string.tostring(rid)] != friends[string.tostring(id)] 
 	})
 }
 
 function get_kin(){
-	nearby = neighbors.filter(function(rid, data){
-		return data.distance < vision})
+	nearby = near()
 	
 	return nearby.filter(function(rid, data){
 		return friends[string.tostring(rid)] == friends[string.tostring(id)] 
 	})
+}
+
+function near(){
+	nearby = neighbors.filter(function(rid, data){
+		return data.distance < vision})
+	return nearby
 }
 
 function switch_swarm(){
@@ -208,6 +220,12 @@ function listener(){
 	else {
 		friends[string.tostring(id)] = 3
 	}
+	# swtich case?
+	neighbors.listen("switch", function(vid, value, rid){
+		if (value == id){
+			switch_count = switch_count + 1
+		}
+	})
 }
 
 function F(dist, desire, vision) {
@@ -250,6 +268,56 @@ function check_switch(same_neighbors, non_same) {
 	if ((percent_same > 0.5) and ((num_same + num_diff) > 5) and ((num_same + num_diff) < 7) )
 		switch_swarm()
 }
+
+
+function look_at_neighbors(same_neighbors, non_same){
+	nearby = near()
+	negative = {}
+	positive = {}
+	sort = {}
+	
+	if (non_same.count() > 1){
+	
+		nearby.foreach(function(rid, data){
+			if (data.azimuth < 0){
+				negative[data.azimuth] = rid
+			}
+			else{
+				positive[data.azimuth] = rid
+			}
+		})
+		i = size(negative)
+		foreach(negative, function(azi, rid){
+			sort[i] = rid
+			i = i - 1
+		})
+		i = size(negative) + 1
+		foreach(positive, function(azi, rid){
+			sort[i] = rid 
+			i = i + 1
+		})	
+		
+		#log("here")
+		my_swarm = friends[string.tostring(id)]
+		last_swarm = friends[sort[string.tostring(nearby.count())]]
+		middle_swarm = friends[sort[string.tostring(nearby.count() - 1)]]
+		middle_bot = sort[string.tostring(nearby.count() - 1)]
+		
+		foreach(sort, function(index, rid){
+			current_swarm = friends[string.tostring(rid)]
+			#log("last swarm was :", last_swarm, " and current swarm is :", current_swarm)
+			if ((current_swarm == last_swarm) and (current_swarm == middle_swarm) and (current_swarm != my_swarm)){
+				log("switch robot number :", rid)
+				neighbors.broadcast("switch", middle_bot)
+				middle_bot = rid
+			}
+			last_swarm = middle_swarm
+			middle_swarm = current_swarm
+		})
+	}
+	
+}
+
 
 # This function is executed when you press the reset button
 function reset() {
