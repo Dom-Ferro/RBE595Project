@@ -101,6 +101,16 @@ footbot_wheels [default]
 
   </controllers>
 
+  <!-- ****************** -->
+  <!-- * Loop functions * -->
+  <!-- ****************** -->
+
+  <loop_functions library="build/libthreshold_model"
+	  	  label="threshold_model"
+		  outfile="data.dat">
+  </loop_functions>
+
+
   <!-- *********************** -->
   <!-- * Arena configuration * -->
   <!-- *********************** -->
