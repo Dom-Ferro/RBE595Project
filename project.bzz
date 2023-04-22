@@ -70,6 +70,15 @@ function init() {
 	switch_thresh = 500
 	listener()
 
+	happiness = 100.0
+	happy_thresh = 3.0
+	position = {
+		.0 = pose.position.x,
+		.1 = pose.position.y
+	}
+
+
+
 }
 
 # This function is executed at each time step
@@ -129,7 +138,18 @@ function step() {
 		vec.y = vec.y + y
 	})
 
-	
+	happiness = math.abs(vec.x) + math.abs(vec.y)
+
+	if (happiness < happy_thresh)
+		debug.print(":-D")
+	else {
+		debug.print(":-(")
+	}
+	position = {
+		.0 = pose.position.x,
+		.1 = pose.position.y
+	}
+	#debug.print(happiness)
 
 	goal_vec_x = 1.01 ^(goal_x - pose.position.x)# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
@@ -300,10 +320,10 @@ function look_at_neighbors(same_neighbors, non_same){
 			i = i + 1
 		})	
 		
-		#log("here")
+		
 		my_swarm = friends[string.tostring(id)]
-		last_swarm = friends[sort[string.tostring(nearby.count() - 1)]]
-		middle_swarm = friends[sort[string.tostring(nearby.count())]]
+		last_swarm = friends[sort[(nearby.count() - 1)]] #friends[sort[string.tostring(nearby.count() - 1)]]
+		middle_swarm = friends[sort[(nearby.count())]] #friends[sort[string.tostring(nearby.count())]]
 		middle_bot = sort[string.tostring(nearby.count() - 1)]
 		
 		foreach(sort, function(index, rid){
