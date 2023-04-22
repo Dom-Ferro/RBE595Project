@@ -67,7 +67,7 @@ function init() {
 	non_same = {} # neighbors.nonkin()
  	friends = {}
 	switch_count = 0
-	switch_thresh = 100
+	switch_thresh = 500
 	listener()
 
 }
@@ -96,6 +96,9 @@ function step() {
 	if(switch_count > switch_thresh){
 		switch_swarm()
 		switch_count = 0
+	}
+	else if (switch_count > 0){
+		switch_count = switch_count - 1 
 	}
 	
 	turn = turn + 1
@@ -223,7 +226,7 @@ function listener(){
 	# swtich case?
 	neighbors.listen("switch", function(vid, value, rid){
 		if (value == id){
-			switch_count = switch_count + 1
+			switch_count = switch_count + 2
 		}
 	})
 }
@@ -299,8 +302,8 @@ function look_at_neighbors(same_neighbors, non_same){
 		
 		#log("here")
 		my_swarm = friends[string.tostring(id)]
-		last_swarm = friends[sort[string.tostring(nearby.count())]]
-		middle_swarm = friends[sort[string.tostring(nearby.count() - 1)]]
+		last_swarm = friends[sort[string.tostring(nearby.count() - 1)]]
+		middle_swarm = friends[sort[string.tostring(nearby.count())]]
 		middle_bot = sort[string.tostring(nearby.count() - 1)]
 		
 		foreach(sort, function(index, rid){
