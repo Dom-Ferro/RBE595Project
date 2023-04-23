@@ -131,10 +131,10 @@ function step() {
 
 	
 
-	goal_vec_x = 1.01 ^(goal_x - pose.position.x)# * 0.5
+	goal_vec_x = 1.001 ^(goal_x - pose.position.x)# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 	vec.x = vec.x + goal_vec_x
-	goal_vec_y =  1.01 ^(goal_y - pose.position.y)# * 0.5
+	goal_vec_y =  1.001 ^(goal_y - pose.position.y)# * 0.5
 	vec.y = vec.y + goal_vec_y
 	
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
@@ -156,7 +156,7 @@ function step() {
 	gotoc(sx, sy)
 		#scale the vector?
 
-	look_at_neighbors(same_neighbors, non_same)
+	look_at_neighbors()
 
 }
 
@@ -255,7 +255,9 @@ function F(dist, desire, vision) {
 }
 
 
-function check_switch(same_neighbors, non_same) {
+function check_switch(non_same) {
+	same_neighbors = get_kin()
+	non_same = get_nonkin()
 	num_same = 0.0
 	num_diff = 0.0
 	same_neighbors.foreach(function(rid,data) {
@@ -273,7 +275,10 @@ function check_switch(same_neighbors, non_same) {
 }
 
 
-function look_at_neighbors(same_neighbors, non_same){
+function look_at_neighbors(){
+	same_neighbors = get_kin()
+	non_same = get_nonkin()
+	
 	nearby = near()
 	negative = {}
 	positive = {}
@@ -300,17 +305,33 @@ function look_at_neighbors(same_neighbors, non_same){
 			i = i + 1
 		})	
 		
+		num_nearby = 	nearby.count()
+		same_nearby = same_neighbors.count()
+		#if (same_nearby == null){
+		#	same_nearby = 0
+		#}
+		#if (num_nearby == null){
+		#	num_nearby = 0
+		#}
+		log("robot num: ", id)
+		log("same neighbors: ", same_nearby)
+		log("nearby neighbors: ", num_nearby)
+		
+		if (same_neighbors.count() == nearby.count()){
+			switch_count = switch_count + 2
+		}
+		
 		#log("here")
 		my_swarm = friends[string.tostring(id)]
-		last_swarm = friends[sort[string.tostring(nearby.count() - 1)]]
-		middle_swarm = friends[sort[string.tostring(nearby.count())]]
+		last_swarm = friends[string.tostring(sort[string.tostring(nearby.count())])]
+		middle_swarm = friends[string.tostring(sort[string.tostring(nearby.count() - 1)])]
 		middle_bot = sort[string.tostring(nearby.count() - 1)]
 		
 		foreach(sort, function(index, rid){
 			current_swarm = friends[string.tostring(rid)]
 			#log("last swarm was :", last_swarm, " and current swarm is :", current_swarm)
 			if ((current_swarm == last_swarm) and (current_swarm == middle_swarm) and (current_swarm != my_swarm)){
-				log("switch robot number :", rid)
+				# log("switch robot number :", rid)
 				neighbors.broadcast("switch", middle_bot)
 				middle_bot = rid
 			}
