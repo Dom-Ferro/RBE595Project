@@ -3,3 +3,9 @@
 *.bdb
 *.bo
 *.png
+
+###################
+# Generated files #
+###################
+build/*
+*.dat
