@@ -138,10 +138,12 @@ function step() {
 		vec.y = vec.y + y
 	})
 
-	happiness = math.abs(vec.x) + math.abs(vec.y)
+	happiness = calc_happy(vec) #math.abs(vec.x) + math.abs(vec.y)
+	#calc_happy(vec)#, same_neighbors, non_same)
 
-	if (happiness < happy_thresh)
+	if (happiness < happy_thresh) {
 		debug.print(":-D")
+	}
 	else {
 		debug.print(":-(")
 	}
@@ -341,6 +343,12 @@ function look_at_neighbors(same_neighbors, non_same){
 	
 }
 
+
+function calc_happy(vector) {#, same_swarm, diff_swarm) {
+	happy = math.abs(vector.x) + math.abs(vector.y)
+
+	return happy
+}
 
 # This function is executed when you press the reset button
 function reset() {
