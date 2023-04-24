@@ -76,7 +76,7 @@ function init() {
 		.1 = pose.position.y
 	}
 
-	angle_offset = 90.0
+	angle_offset = 60.0
 
 	type_flock = GRID
 
@@ -109,9 +109,11 @@ function init_grid() {
 	gg_dist = 50.0
 	bg_dist = 50.0 * math.sqrt(2)
 	gb_dist = 50.0 * math.sqrt(2)
+	vision = 90 #cm
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
+	angle_offset = 90.0
 
 	if (blue.in())
 		set_leds(0,0,255)
@@ -120,14 +122,15 @@ function init_grid() {
 
 }
 
-function init_grid() {
+function init_cell() {
 	bb_dist = 35.0
 	gg_dist = 50.0
 	bg_dist = 50.0
 	gb_dist = 75.0
+	vision = 120 #cm
 
-	blue.select(id % 2 == 0)
-	green.select(id % 2 == 1)
+	blue.select(id % 3 != 0)
+	green.select(id % 3 == 0)
 
 	if (blue.in())
 		set_leds(0,0,255)
