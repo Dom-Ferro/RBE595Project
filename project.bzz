@@ -13,12 +13,6 @@
 
 # This function is executed once at init time
 function init() {
-	#if (id == 0){
-	#	log("green when driving")
-	#	log("orange when an obstacle is near")
-	#	log("red when obstacle is very close")
-	#	log("flashes black to flash")
-	#}
 	
 	T = 100
 	k = 0.4
@@ -30,7 +24,7 @@ function init() {
 	c = math.rng.uniform(0,100)
 
 	# no magic numbers
-	base_speed = 5.0
+	base_speed = 7.5
 	turning_mod = 0.5
 	lin_mod = 0.1
 	colliding = 0
@@ -41,21 +35,16 @@ function init() {
 	NUM_ROBOTS = 30
 
 	#grid things
-	bb_dist = 25.0
-	gg_dist = 50.0 
+	bb_dist = 30.0
+	gg_dist = 40.0 
 	bg_dist = 50.0
 	gb_dist = 75.0
-	
-	# write things to the rsobot 
-	#set_wheels(base_speed, base_speed)
-	#set_leds(r, g, b)
 
 	blue = swarm.create(1) # swarm 0
 	green = swarm.create(2) # swarm 1
-
 	
-	blue.select(id % 3 != 0)
-	green.select(id % 3 == 0)
+	blue.select(id % 10 > 4)
+	green.select(id % 10 <= 4)
 
 	if (blue.in())
 		set_leds(0,0,255)
@@ -68,7 +57,7 @@ function init() {
 	non_same = {} # neighbors.nonkin()
  	friends = {}
 	switch_count = 0
-	switch_thresh = 500
+	switch_thresh = 200
 	listener()
 
 	happiness = 100.0
@@ -79,16 +68,27 @@ function init() {
 	}
 
 	angle_offset = 90.0
-
+	alpha_attract = 1.01
+	alpha_repulse = 0.7
+	
+	count = 0
+	goal_mod = 100000000.0
 
 }
 
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
+	if (count > 500){
+		goal_x = 0
+		goal_y = 0
+		goal_mod = 100000.0
+	}
 	same_neighbors = get_kin() # neighbors.kin()
 	non_same = get_nonkin() # neighbors.nonkin()
 	#log(non_same)	
+	count = count + 1
+		
 	green.exec(function(){
 		neighbors.broadcast(string.tostring(id),  GREEN)})
 	blue.exec(function(){
@@ -97,20 +97,6 @@ function step() {
 	vec = {}
 	vec.x = 0.0
 	vec.y = 0.0
-
-	#if (turn == id) {
-		#log(non_same.poses)
-		#check_switch(same_neighbors, non_same)
-	#}
-	# debug.print(switch_count)
-	#debug.print(switch_count)
-	#if(switch_count > switch_thresh){
-		#switch_swarm()
-		#switch_count = 0
-	#}
-	#else if (switch_count > 0){
-	#	switch_count = switch_count - 1 
-	#}
 	
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
@@ -121,24 +107,28 @@ function step() {
 
 	#calculate the vectors for the attraction/repulsion
 	non_same.foreach(function(rid,data) {
-		#log("AAAAAAaaah")
 		#log(neighbors.poses[rid])
-		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
-		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
+		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision, alpha_attract, alpha_repulse)
+		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision, alpha_attract, alpha_repulse)
 
 		vec.x = vec.x + x
 		vec.y = vec.y + y
 	})
-
-	
 	
 	same_dist = bb_dist
 	if (green.in())
 		same_dist = gg_dist
 
 	same_neighbors.foreach(function(rid,data) {
-		x = math.cos(data.azimuth)*F(data.distance, same_dist, vision)
-		y = math.sin(data.azimuth)*F(data.distance, same_dist, vision)
+
+		if (blue.in()){
+			x = math.cos(data.azimuth)*F(data.distance, same_dist, vision, 1.1, alpha_repulse)
+			y = math.sin(data.azimuth)*F(data.distance, same_dist, vision, 1.1, alpha_repulse)
+		}
+		else{
+			x = math.cos(data.azimuth)*F(data.distance, same_dist, vision, 1.0001, alpha_repulse)
+			y = math.sin(data.azimuth)*F(data.distance, same_dist, vision, 1.0001, alpha_repulse)
+		}
 
 		vec.x = vec.x + x
 		vec.y = vec.y + y
@@ -162,13 +152,17 @@ function step() {
 	#debug.print(happiness)
 
 	desire = 0.0
-	if (green.in())
-		desire = 400.0
-
+	if (green.in()){
+		desire = 200.0 + count%300
+		goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000001, 0.99)/100.0)
+		goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000001, 0.99)/100.0)
+	}
+	else{
+		desire = 50.0
+		goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
+		goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
+	}
 	
-	goal_vec_x = F((goal_x - pose.position.x), desire, 2000.0)
-	goal_vec_y = F((goal_y - pose.position.y), desire, 2000.0)
-
 	if (blue.in())
 		goal_vec_x = 2 * goal_vec_x
 		goal_vec_y = 2 * goal_vec_y
@@ -187,7 +181,7 @@ function step() {
 	sy = vec.y
 	
 	#log("sx: ", sx, "sy: ", sy)
-	if ((vecsum > base_speed) and (0 == 1)) {
+	if ((vecsum > base_speed)) {
 		sx = (vec.x / vecsum) * base_speed
 		sy = (vec.y / vecsum) * base_speed
 	}
@@ -196,7 +190,7 @@ function step() {
 	#move along the vector
 	gotoc(sx, sy)
 		#scale the vector?
-
+	check_cell_switch()
 	#look_at_neighbors(same_neighbors, non_same)
 
 }
@@ -272,7 +266,7 @@ function listener(){
 	})
 }
 
-function F(dist, desire, vision) {
+function F(dist, desire, vision, alpha_attract, alpha_repulse) {
 	#factor = (4 * e)/dist
 	#log("dist: ", dist, " desired: ", desired_dist)
 	#first_expo = (desired_dist / dist)^4
@@ -280,15 +274,13 @@ function F(dist, desire, vision) {
 	#force = factor * (first_expo - second_expo)
 	force = 0.0
 	band = 2.5
-	alpha_attract = 1.01
-	alpha_repulse = 0.7
 	if (dist < desire - band) {
-		force = (alpha_repulse^((dist - desire)))
-		force = -2*force
+		force = float((alpha_repulse^((dist - desire))))
+		force = float(-2.0*force)
 	}
 	else if ((dist > desire + band) and (dist < vision)){
-		force = alpha_attract^((dist - desire))
-		force = force
+		force = float(alpha_attract^((dist - desire)))
+		force = float(force)
 	}
 	else
 		force = 0.0
@@ -296,20 +288,40 @@ function F(dist, desire, vision) {
 }
 
 
-function check_switch(same_neighbors, non_same) {
+function check_cell_switch() {
+	same_neighbors = get_kin()
+	non_same = get_nonkin()
 	num_same = 0.0
 	num_diff = 0.0
-	same_neighbors.foreach(function(rid,data) {
-		num_same = num_same + 1.0
-	})
-	non_same.foreach(function(rid, data) {
-		num_diff = num_diff + 1.0
-	})
+	percent_same = 0.0
+	same = 0.0
+	if (type(same_neighbors) != nil)
+		num_same = same_neighbors.count()
+	if (type(non_same) != nil)
+		num_diff = non_same.count()
 
-	percent_same = num_same / (num_same + num_diff)
-	#debug.print("num same: ", num_same, " num_diff: ", num_diff, "percent_same: ", percent_same)
+	if(num_same == nil){
+		num_same = 0.0
+	}
+	if(same_neighbors == nil){
+		same_neighbors = 0.0
+	}
+	
+	sum = float(num_same + num_diff)
+	if (sum != 0.0)
+		percent_same = float(num_same / sum)
+	else{
+		percent_same = 0.0
+	}
+	#debug.print("num same: ", num_same, " num_diff: ", num_diff, " percent_same: ", percent_same, " sum: ", sum)
 
-	if ((percent_same > 0.5) and ((num_same + num_diff) > 5) and ((num_same + num_diff) < 7) )
+	if ((percent_same < 0.5) and ((num_same + num_diff) > 5) and (blue.in()))
+		switch_count = switch_count + 1
+	else{
+		switch_count = switch_count - 1
+	}
+	
+	if (switch_count > switch_thresh)
 		switch_swarm()
 }
 
