@@ -25,6 +25,11 @@ function init() {
 	
 	GREEN = 1
 	BLUE = 0
+
+	HEX = 0
+	GRID = 1
+	CELL = 2
+
 	# give a seed or all the robots pick the same random number
 	math.rng.setseed(id)
 	c = math.rng.uniform(0,100)
@@ -40,10 +45,11 @@ function init() {
 	goal_y = -2.5
 	NUM_ROBOTS = 30
 
-	#grid things
+	#distances
 	bb_dist = 50.0
-	gg_dist = 50.0 * math.sqrt(2)
+	gg_dist = 50.0
 	bg_dist = 50.0
+	gb_dist = 50.0
 	
 	# write things to the rsobot 
 	#set_wheels(base_speed, base_speed)
@@ -53,14 +59,7 @@ function init() {
 	green = swarm.create(2) # swarm 1
 
 	
-	blue.select(id % 2 == 0)
-	green.select(id % 2 == 1)
-
-	if (blue.in())
-		set_leds(0,0,255)
-	else
-		set_leds(0,255,0)
-
+	
 	turn = 0
 
 	same_neighbors = {} # neighbors.kin()
@@ -79,9 +78,63 @@ function init() {
 
 	angle_offset = 90.0
 
+	type_flock = GRID
+
+	if (type_flock == HEX) {
+		init_hex()
+	} else if (type_flock == GRID) {
+		init_grid()
+	}else if (type_flock == CELL) {
+		init_cell()
+	}
+
 
 }
 
+function init_hex() {
+
+	blue.select(id % 2 == 0)
+	green.select(id % 2 == 1)
+
+	if (blue.in())
+		set_leds(0,0,255)
+	else
+		set_leds(0,255,0)
+
+}
+
+
+function init_grid() {
+	bb_dist = 50.0
+	gg_dist = 50.0
+	bg_dist = 50.0 * math.sqrt(2)
+	gb_dist = 50.0 * math.sqrt(2)
+
+	blue.select(id % 2 == 0)
+	green.select(id % 2 == 1)
+
+	if (blue.in())
+		set_leds(0,0,255)
+	else
+		set_leds(0,255,0)
+
+}
+
+function init_grid() {
+	bb_dist = 35.0
+	gg_dist = 50.0
+	bg_dist = 50.0
+	gb_dist = 75.0
+
+	blue.select(id % 2 == 0)
+	green.select(id % 2 == 1)
+
+	if (blue.in())
+		set_leds(0,0,255)
+	else
+		set_leds(0,255,0)
+
+}
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
@@ -97,27 +150,23 @@ function step() {
 	vec.x = 0.0
 	vec.y = 0.0
 
-	#if (turn == id) {
-		#log(non_same.poses)
-		#check_switch(same_neighbors, non_same)
-	#}
-	# debug.print(switch_count)
-	debug.print(switch_count)
-	if(switch_count > switch_thresh){
-		switch_swarm()
-		switch_count = 0
+	if ((type_flock == GRID) or (type_flock == CELL)) {
+		debug.print(switch_count)
+		if(switch_count > switch_thresh){
+			switch_swarm()
+			switch_count = 0
+		}
+		else if (switch_count > 0){
+			switch_count = switch_count - 1 
+		}
 	}
-	else if (switch_count > 0){
-		switch_count = switch_count - 1 
-	}
+	
 	
 	turn = turn + 1
 	turn = turn % NUM_ROBOTS
 
 	#calculate the vectors for the attraction/repulsion
 	non_same.foreach(function(rid,data) {
-		#log("AAAAAAaaah")
-		#log(neighbors.poses[rid])
 		x = math.cos(data.azimuth)*F(data.distance, bg_dist, vision)
 		y = math.sin(data.azimuth)*F(data.distance, bg_dist, vision)
 
@@ -156,10 +205,10 @@ function step() {
 	}
 	#debug.print(happiness)
 
-	goal_vec_x = 1.01 ^(goal_x - pose.position.x)# * 0.5
+	goal_vec_x = 1.001 ^(goal_x - pose.position.x)# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 	vec.x = vec.x + goal_vec_x
-	goal_vec_y =  1.01 ^(goal_y - pose.position.y)# * 0.5
+	goal_vec_y =  1.001 ^(goal_y - pose.position.y)# * 0.5
 	vec.y = vec.y + goal_vec_y
 	
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
@@ -181,7 +230,7 @@ function step() {
 	gotoc(sx, sy)
 		#scale the vector?
 
-	look_at_neighbors(same_neighbors, non_same)
+	look_at_neighbors()
 
 }
 
@@ -280,7 +329,9 @@ function F(dist, desire, vision) {
 }
 
 
-function check_switch(same_neighbors, non_same) {
+function check_switch(non_same) {
+	same_neighbors = get_kin()
+	non_same = get_nonkin()
 	num_same = 0.0
 	num_diff = 0.0
 	same_neighbors.foreach(function(rid,data) {
@@ -297,8 +348,11 @@ function check_switch(same_neighbors, non_same) {
 		switch_swarm()
 }
 
-
-function look_at_neighbors(same_neighbors, non_same){
+function look_at_neighbors_grid() {
+	
+	same_neighbors = get_kin()
+	non_same = get_nonkin()
+	
 	nearby = near()
 	negative = {}
 	positive = {}
@@ -325,17 +379,35 @@ function look_at_neighbors(same_neighbors, non_same){
 			i = i + 1
 		})	
 		
+
+		num_nearby = 	nearby.count()
+		same_nearby = same_neighbors.count()
+		#if (same_nearby == null){
+		#	same_nearby = 0
+		#}
+		#if (num_nearby == null){
+		#	num_nearby = 0
+		#}
+		log("robot num: ", id)
+		log("same neighbors: ", same_nearby)
+		log("nearby neighbors: ", num_nearby)
 		
+		if (same_neighbors.count() == nearby.count()){
+			switch_count = switch_count + 2
+		}
+		
+		#log("here")
 		my_swarm = friends[string.tostring(id)]
-		last_swarm = friends[sort[(nearby.count() - 1)]] #friends[sort[string.tostring(nearby.count() - 1)]]
-		middle_swarm = friends[sort[(nearby.count())]] #friends[sort[string.tostring(nearby.count())]]
+		last_swarm = friends[string.tostring(sort[string.tostring(nearby.count())])]
+		middle_swarm = friends[string.tostring(sort[string.tostring(nearby.count() - 1)])]
+
 		middle_bot = sort[string.tostring(nearby.count() - 1)]
 		
 		foreach(sort, function(index, rid){
 			current_swarm = friends[string.tostring(rid)]
 			#log("last swarm was :", last_swarm, " and current swarm is :", current_swarm)
 			if ((current_swarm == last_swarm) and (current_swarm == middle_swarm) and (current_swarm != my_swarm)){
-				log("switch robot number :", rid)
+				# log("switch robot number :", rid)
 				neighbors.broadcast("switch", middle_bot)
 				middle_bot = rid
 			}
@@ -343,7 +415,19 @@ function look_at_neighbors(same_neighbors, non_same){
 			middle_swarm = current_swarm
 		})
 	}
+}
+
+function look_at_neighbors_cell() {
 	
+}
+
+
+function look_at_neighbors(){
+	if (type_flock == GRID) {
+		look_at_neighbors_grid()
+	} else if (type_flock == CELL){
+		look_at_neighbors_cell()
+	}
 }
 
 
