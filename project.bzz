@@ -109,10 +109,10 @@ function init_grid() {
 	bg_dist = 40.0 
 	gb_dist = 40.0 
 	vision = 100 #cm
-	switch_rad = 60
+	switch_rad = 70
 
 	switch_count = 0
-	switch_thresh = 25
+	switch_thresh = 200
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
@@ -527,6 +527,7 @@ function check_grid_switch() {
 		#log("here")
 		my_swarm = friends[string.tostring(id)]
 		last_swarm = friends[string.tostring(sort[string.tostring(nearby.count()-1)])]
+		middle_key = string.tostring(nearby.count())
 		middle_swarm = friends[string.tostring(sort[string.tostring(nearby.count())])]
 
 		middle_bot = sort[string.tostring(nearby.count())]
@@ -537,10 +538,14 @@ function check_grid_switch() {
 			if ((current_swarm == last_swarm) and (current_swarm == middle_swarm)){ # and (current_swarm != my_swarm)){
 				# log("switch robot number :", rid)
 				neighbors.broadcast("switch", middle_bot)
-				middle_bot = rid
 			}
+			#if ((current_swarm == middle_swarm) and (current_swarm == my_swarm) and (math.abs(debug_sort[index] - debug_sort[middle_key]) <= math.pi/6)){ 
+			#	neighbors.broadcast("switch", middle_bot)
+			#}
 			last_swarm = middle_swarm
 			middle_swarm = current_swarm
+			middle_bot = rid
+			middle_key = index
 		})
 	}
 }
