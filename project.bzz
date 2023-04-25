@@ -283,7 +283,7 @@ function step() {
 		ty = goal_y*b - pose.position.y*b
 		d = math.sqrt((tx)^2 + (ty)^2)
 		angle = math.atan(ty, tx)
-		rot = calc_angle_offset(angle, the_yaw)# the_yaw - angle
+		rot = angle - the_yaw#calc_angle_offset(angle, the_yaw)# the_yaw - angle
 		temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))
 		temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))
 		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
@@ -302,7 +302,7 @@ function step() {
 		
 		if (math.abs(rot) < 0.1745) {
 			goal_vec_x = base_speed * 0.5
-			goal_vec_y = 0.0 #rot * base_speed
+			goal_vec_y = rot * base_speed
 		} else {
 			goal_vec_x = base_speed * 0.5 *(math.abs(tx)/tx)
 			goal_vec_y = rot
@@ -348,7 +348,7 @@ function step() {
 	
 
 	#move along the vector
-	gotoc(sx, sy)
+	gotop(sx, sy)
 		#scale the vector?
 
 	check_switch()
