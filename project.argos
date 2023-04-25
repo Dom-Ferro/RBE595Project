@@ -86,7 +86,8 @@ footbot_wheels [default]
         <kheperaiv_proximity implementation="default" show_rays="false" />
         <range_and_bearing   implementation="medium" medium="rab"
                              show_rays="false" noise_std_dev="0" />
-        <positioning         implementation="default" />
+	<positioning         implementation="default" />
+	<kheperaiv_light     implementation="rot_z_only" />
       </sensors>
       <!--
           The <params> section is passed to the Buzz C++ controller.
@@ -146,10 +147,10 @@ $ argos3 -q box
     </box>
 	
     <light id ="light" 
-      position="2.5,-2.5,0.5" 
+      position="0,0,0.5" 
       orientation="0,0,0"
       color="yellow"
-      intensity="1"
+      intensity="100"
       medium="leds"
     />
 

@@ -50,7 +50,8 @@ function init() {
 
 	blue = swarm.create(1) # swarm 0
 	green = swarm.create(2) # swarm 1
-	
+	aggregation_mod = 1.0
+
 	turn = 0
 
 	same_neighbors = {} # neighbors.kin()
@@ -67,7 +68,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = GRID
+	type_flock = HEX
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -137,8 +138,12 @@ function init_cell() {
 	gb_dist = 75.0
 	vision = 120 #cm
 
-	blue.select(id % 10 > 4)
-	green.select(id % 10 <= 4)
+
+	switch_count = 0
+	switch_thresh = 200
+
+	blue.select(id % 10 >= 4)
+	green.select(id % 10 < 4)
 
 	if (blue.in()){
 		set_leds(0,0,255)
@@ -156,10 +161,11 @@ function init_cell() {
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
-	if (count > 5000){
-		goal_x = 0
-		goal_y = 0
+	if (count > 500){
+		goal_x = 0.0
+		goal_y = 0.0
 		goal_mod = 100000.0
+		aggregation_mod = 0.1
 	}
 	same_neighbors = get_kin() # neighbors.kin()
 	non_same = get_nonkin() # neighbors.nonkin()
@@ -266,20 +272,70 @@ function step() {
 		goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
 	}
 	else {
-		goal_vec_x = 1.01^(goal_x - pose.position.x)
-		goal_vec_y = 1.01^(goal_y - pose.position.y)
+		desire = 2.5
+		the_yaw = float(pose.orientation["yaw"])# - (3.14159 / 2)
+		goal_x = 0.0
+		goal_y = 0.0
+
+		b = 1.0
+
+		tx = goal_x*b - pose.position.x*b
+		ty = goal_y*b - pose.position.y*b
+		d = math.sqrt((tx)^2 + (ty)^2)
+		angle = math.atan(ty, tx)
+		rot = calc_angle_offset(angle, the_yaw)# the_yaw - angle
+		temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))
+		temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))
+		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
+		#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
+		#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
+		f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+		
+		a = calc_goal_angle()
+		#log()
+		#log("id: ", id, "angle: ", a)
+		#log()
+		if ((id == "12")){ #or (id == 12)) {
+				#log(a)
+
+			}
+		
+		if (math.abs(rot) < 0.1745) {
+			goal_vec_x = base_speed * 0.5
+			goal_vec_y = 0.0 #rot * base_speed
+		} else {
+			goal_vec_x = base_speed * 0.5 *(math.abs(tx)/tx)
+			goal_vec_y = rot
+		}
+
+		#goal_vec_x = (math.cos(a) * base_speed) #temp_x) - (math.sin(a) * temp_y)
+		#goal_vec_y = (math.sin(a) * base_speed) #temp_x) + (math.cos(a) * temp_y) 
+
+		#goal_vec_x = f#goal_vec_x * 10.0
+		#goal_vec_y = rot * 10.0#goal_vec_y
+
+		
+		if ((id == "17") or (id == 17)) {
+			log("yaw: ", pose.orientation["yaw"], " angle: ", rot, " x: ", goal_vec_x, " y: ", goal_vec_y)
+
+		}
 	}
 	#goal_vec_x = 10* 1.01 ^()# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
-	vec.x = vec.x + goal_vec_x
+	vec.x = (aggregation_mod * vec.x) + temp_x
 	#goal_vec_y =  10* 1.01^(goal_y - pose.position.y)# * 0.5
-	vec.y = vec.y + goal_vec_y
+	vec.y = (aggregation_mod * vec.y) + temp_y
+
+	vec.x = goal_vec_x
+	vec.y = -goal_vec_y
 	
 	#log(type_flock)
 	#log("rid: ", id, " vec x: ", vec.x, " vec y: ", vec.y, ", goal vec x: ", goal_vec_x,", goal vec y: ", goal_vec_y)
 
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
+	
+
 
 	sx = vec.x
 	sy = vec.y
@@ -298,6 +354,21 @@ function step() {
 	check_switch()
 	debug.print(switch_count)
 
+}
+
+function calc_goal_angle(){
+	angle = 0.0
+	foreach(light, function(key,value){
+		if ((key != "0") and (key != "7")) {
+			#log("key: ", key, "angle: ", value.angle, " val: ", value.value)
+			if (value.value > 0.0) {
+				
+				angle = angle + (value.angle) #* (value.value)
+			}
+		}
+	})
+	#log()
+	return angle
 }
 
 function get_nonkin(){
@@ -556,7 +627,7 @@ function check_switch(){
 	if (type_flock == GRID) {
 		check_grid_switch()
 	} else if (type_flock == CELL){
-		check_cell_switch()
+		#check_cell_switch()
 	}
 }
 
@@ -603,8 +674,14 @@ function calc_happy(vector) {
 
 function calc_angle_offset(azimuth1, azimuth2) {
 	offset = azimuth1-azimuth2
-	log("here")
-	return math.min(math.abs(offset),math.abs(360 - offset))
+	if (offset >= 3.14159) {
+		return offset - 3.14159
+	} else  if (offset <= -3.14159){
+		return  math.abs(math.max(offset,offset + 3.1519))
+	}
+	return offset
+	#log("here")
+	
 }
 # This function is executed when you press the reset button
 function reset() {
