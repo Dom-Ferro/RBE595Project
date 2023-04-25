@@ -283,7 +283,7 @@ function step() {
 		ty = goal_y*b - pose.position.y*b
 		d = math.sqrt((tx)^2 + (ty)^2)
 		angle = math.atan(ty, tx)
-		rot = calc_angle_offset(angle, the_yaw)# the_yaw - angle
+		rotate = the_yaw + angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
 		temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))
 		temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))
 		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
@@ -300,12 +300,15 @@ function step() {
 
 			}
 		
-		if (math.abs(rot) < 0.1745) {
+		if (math.abs(angle-the_yaw) < 0.1745) {
 			goal_vec_x = base_speed * 0.5
-			goal_vec_y = rot #* base_speed
-		} else {
-			goal_vec_x = math.cos(rot)*base_speed *(math.abs(tx)/tx)
-			goal_vec_y = math.sin(rot)*base_speed *(math.abs(ty)/ty)
+			goal_vec_y = angle-the_yaw #* base_speed
+		} else {#(math.abs(angle-the_yaw) > 1.0) {
+			goal_vec_x = base_speed *0.5
+			goal_vec_y = (angle-the_yaw) * base_speed
+		#}else {
+		#	goal_vec_x = math.cos(angle-the_yaw)*base_speed* 0.5 #*(math.abs(tx)/tx)
+		#	goal_vec_y = math.sin(angle-the_yaw)*base_speed* 0.5 # *(math.abs(ty)/ty)
 		}
 
 		#goal_vec_x = (math.cos(a) * base_speed) #temp_x) - (math.sin(a) * temp_y)
@@ -316,7 +319,7 @@ function step() {
 
 		
 		if ((id == "28") or (id == 28)) {
-			log("yaw: ", pose.orientation["yaw"], " angle: ", rot, " x: ", goal_vec_x, " y: ", goal_vec_y)
+			log("yaw: ", pose.orientation["yaw"], " angle: ", angle, "add: ", angle-the_yaw, " rot: ", rotate, " x: ", goal_vec_x, " y: ", goal_vec_y)
 
 		}
 	}
