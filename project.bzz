@@ -95,10 +95,12 @@ function init_hex() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else{
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = BLUE
 	}
 	log("init hex")
 
@@ -290,8 +292,8 @@ function step() {
 		} else {
 
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
-			goal_x = 0.0
-			goal_y = 0.0
+			goal_x = -2.5
+			goal_y = 2.5
 
 			b = 100.0
 
@@ -433,6 +435,7 @@ function switch_swarm(){
 		green.join()
 		neighbors.broadcast(string.tostring(id), GREEN)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 		set_leds(0, 255, 0)
 	}
 	else if(green.in()){
@@ -440,6 +443,7 @@ function switch_swarm(){
 		blue.join()
 		neighbors.broadcast(string.tostring(id), BLUE)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 		set_leds(0, 0, 255)
 	}
 	else {
