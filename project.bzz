@@ -75,7 +75,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = GRID
+	type_flock = HEX
 
 	if (type_flock == HEX) {
 		init_hex()
