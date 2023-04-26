@@ -165,12 +165,13 @@ function init_cell() {
 
 
 	switch_count = 0
-	switch_thresh = 200
-	aggregation_counter = 500
+	switch_thresh = 400
+	aggregation_counter = 1000
 
-	blue.select(id % 10 >= 4)
-	green.select(id % 10 < 4)
+	
 	evil.select(id == evil_guy)
+	blue.select(id % 2 == 0)
+	green.select(id % 2 == 1)
 
 	if (blue.in()){
 		set_leds(0,0,255)
@@ -195,9 +196,8 @@ function init_cell() {
 # The main loop is controller by ARGoS
 function step() {
 	if (count > aggregation_counter){
-		goal_x = -2.5
-		goal_y = 2.5
-		goal_mod = 100000.0
+		goal_x = -3.0
+		goal_y = 3.0
 	}
 	same_neighbors = get_kin() # neighbors.kin()
 	non_same = get_nonkin() # neighbors.nonkin()
@@ -233,7 +233,7 @@ function step() {
 	if (green.in())
 		diff_dist = gb_dist
 
-	#calculate the vectors for the attraction/repulsion
+	#######################calculate the vectors for the attraction/repulsion######################################
 	non_same.foreach(function(rid,data) {
 		#log(neighbors.poses[rid])
 		x = math.cos(data.azimuth)*F(data.distance, diff_dist, vision, alpha_attract, alpha_repulse)
@@ -267,6 +267,8 @@ function step() {
 		vec.y = vec.y + y
 	})
 
+################################# HAPPINESS ##################################################################
+
 	happiness = calc_happy(vec) #math.abs(vec.x) + math.abs(vec.y)
 	#calc_happy(vec)#, same_neighbors, non_same)
 
@@ -284,25 +286,9 @@ function step() {
 	}
 	#debug.print(happiness)
 
+ ###################################### GOAL ATTRACTION #####################################################
 	if (type_flock == CELL) {
-		if (count < aggregation_counter ) {
-			desire = 0.0
-			if (green.in()){
-				desire = 200.0 + count%300
-				goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000001, 0.99)/100.0)
-				goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000001, 0.99)/100.0)
-			}
-			else{
-				desire = 50.0
-				goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
-				goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
-			}
 		
-		
-		}
-		else {
-			goal_x = -2.5
-			goal_y = 2.5
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			b = 100.0
 
@@ -311,22 +297,45 @@ function step() {
 			d = math.sqrt((tx)^2 + (ty)^2)
 			ang = math.asin(ty/d)
 			rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
-			
-			#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
-			#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
-			#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
-			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
 
-			goal_vec_x = base_speed * 0.5 *(f / force_cap)
-			goal_vec_y = the_yaw-ang * (f / force_cap)
-			
-
-			#vec.x = 0.0#goal_vec_x
-			#vec.y = 0.0#goal_vec_y
+		if (count < aggregation_counter ) {
+			desire = 0.0
+			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
+			if (green.in()){
+				vec.x = vec.x *2.0
+				vec.y = vec.y *2.0
+				desire = 5.0 + ((count%100)/10)
+				f = float(F(d, desire, 20000.0, 1.001, 0.99999999))
+			}
+			else{
+				vec.x = vec.x / 2.0
+				vec.y = vec.y / 2.0
+				desire = 3.0
+				f = float(F(d, desire, 20000.0, 1.001, 0.9999999999))
+			}
 		}
+		else {
+			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+			if(green.in()){
+				vec.x = vec.x/7.5
+				vec.y = vec.y/7.5
+			}
+			else{
+				vec.x = vec.x/150.0
+				vec.y = vec.y/150.0
+			}
+		}
+
+		goal_vec_x = base_speed * 0.75 *(f / force_cap)
+		goal_vec_y = the_yaw-ang * (f / force_cap)	
+
+		#vec.x = 0.0#goal_vec_x
+		#vec.y = 0.0#goal_vec_y
 			
 	}
+	################################# GRID GOAL VEC #############################################################
 	else if(type_flock == GRID){
+		# pre flock
 		if (count < aggregation_counter) {
 			desire = 2.5
 			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
@@ -334,6 +343,7 @@ function step() {
 		
 		}
 		else {
+		# flock time 
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			b = 100.0
 
@@ -399,13 +409,13 @@ function step() {
 			}
 		}
 					
-		
 	}
 
-	if (count >= aggregation_counter){
 
-		vec.x = vec.x / 10.0
-		vec.y = vec.y / 10.0
+	if (count >= 1){# aggregation_counter){
+
+		vec.x = vec.x *2.0
+		vec.y = vec.y *2.0
 
 		if (blue.in()) {
 			vec.x = vec.x / 2.0
@@ -418,36 +428,18 @@ function step() {
 	vec.x = vec.x + goal_vec_x
 	vec.y = vec.y + goal_vec_y
 
-	if ((id == "17") or (id == 17)) {
+	if ((id == "13") or (id == 13)) {
 		log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
 	}
-	#goal_vec_x = 10* 1.01 ^()# * 0.5
-	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
-	#vec.x = (aggregation_mod * vec.x) + temp_x
-	#goal_vec_y =  10* 1.01^(goal_y - pose.position.y)# * 0.5
-	#vec.y = (aggregation_mod * vec.y) + temp_y
-
-	#if x is pos, y is neg, spin counterclockwise
-	#if x is neg, y is pos, arc counterclockwise
-	#if both pos, spin clockwise
-	#if both neg, arc clockwise 
-	#vec.x = goal_vec_x  #-base_speed * 0.2#goal_vec_x 
-	#vec.y = goal_vec_y #base_speed* 0.2#-goal_vec_y
-	
-	#log(type_flock)
-	#log("rid: ", id, " vec x: ", vec.x, " vec y: ", vec.y, ", goal vec x: ", goal_vec_x,", goal vec y: ", goal_vec_y)
-
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
-	
-
 
 	sx = vec.x
 	sy = vec.y
 	
 	#log("sx: ", sx, "sy: ", sy)
 
-	
+	###################################### GET THE VECTORS ##############################################3
 	
 	if ((vecsum > base_speed)) {
 		sx = (vec.x / vecsum) * base_speed#(base_speed / base_speed_mod)
@@ -456,6 +448,11 @@ function step() {
 	
 	#sx = sx + goal_vec_x
 	#sy = sy + goal_vec_y
+	if((type_flock == CELL) and (blue.in())){
+		sx = 1.0*sx
+		sy = 1.0*sy
+	}
+
 
 	check_switch()
 	debug.print(switch_count)
@@ -614,6 +611,7 @@ function check_cell_switch() {
 	num_diff = 0.0
 	percent_same = 0.0
 	same = 0.0
+	
 	if (type(same_neighbors) != nil)
 		num_same = same_neighbors.count()
 	if (type(non_same) != nil)
@@ -634,9 +632,9 @@ function check_cell_switch() {
 	}
 	#debug.print("num same: ", num_same, " num_diff: ", num_diff, " percent_same: ", percent_same, " sum: ", sum)
 
-	if ((percent_same < 0.5) and ((num_same + num_diff) > 5) and (blue.in()))
+	if ((percent_same < 0.1) and (blue.in()))
 		switch_count = switch_count + 1
-	else{
+	else if (switch_count > 0){
 		switch_count = switch_count - 1
 	}
 	
@@ -752,7 +750,7 @@ function check_switch(){
 	if (type_flock == GRID) {
 		check_grid_switch()
 	} else if (type_flock == CELL){
-		#check_cell_switch()
+		check_cell_switch()
 	}
 }
 
