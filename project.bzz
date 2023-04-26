@@ -70,7 +70,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = GRID
+	type_flock = CELL
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -142,7 +142,7 @@ function init_cell() {
 	gg_dist = 40.0 
 	bg_dist = 50.0
 	gb_dist = 75.0
-	vision = 120 #cm
+	vision = 120.0 #cm
 
 
 	switch_count = 0
@@ -255,22 +255,50 @@ function step() {
 	#debug.print(happiness)
 
 	if (type_flock == CELL) {
-		desire = 0.0
-		if (green.in()){
-			desire = 200.0 + count%300
-			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000001, 0.99)/100.0)
-			goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000001, 0.99)/100.0)
+		if (count < aggregation_counter ) {
+			desire = 0.0
+			if (green.in()){
+				desire = 200.0 + count%300
+				goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000001, 0.99)/100.0)
+				goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000001, 0.99)/100.0)
+			}
+			else{
+				desire = 50.0
+				goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
+				goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
+			}
+		
+		
+			if (blue.in()) {
+				goal_vec_x = 2 * goal_vec_x
+				goal_vec_y = 2 * goal_vec_y
+			}
 		}
-		else{
-			desire = 50.0
-			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
-			goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.00000000001, alpha_repulse)/goal_mod)
+		else {
+			goal_x = -2.5
+			goal_y = 2.5
+			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
+			b = 100.0
+
+			tx = goal_x*b - pose.position.x*b
+			ty = goal_y*b - pose.position.y*b
+			d = math.sqrt((tx)^2 + (ty)^2)
+			ang = math.asin(ty/d)
+			rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
+			
+			#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
+			#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
+			#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
+			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+
+			goal_vec_x = base_speed * 0.5 *(f / force_cap)
+			goal_vec_y = the_yaw-ang * (f / force_cap)
+			
+
+			#vec.x = 0.0#goal_vec_x
+			#vec.y = 0.0#goal_vec_y
 		}
-	
-	
-		if (blue.in())
-			goal_vec_x = 2 * goal_vec_x
-			goal_vec_y = 2 * goal_vec_y
+			
 	}
 	else if(type_flock == GRID){
 		if (count < aggregation_counter) {
@@ -350,14 +378,23 @@ function step() {
 
 	if (count >= aggregation_counter){
 
-		vec.x = vec.x / 4.0
-		vec.y = vec.y / 4.0
+		vec.x = vec.x / 10.0
+		vec.y = vec.y / 10.0
+
+		if (blue.in()) {
+			vec.x = vec.x / 2.0
+			vec.y = vec.y / 2.0
+		}
 
 	}
 
 
 	vec.x = vec.x + goal_vec_x
 	vec.y = vec.y + goal_vec_y
+
+	if ((id == "17") or (id == 17)) {
+		log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
+	}
 	#goal_vec_x = 10* 1.01 ^()# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 	#vec.x = (aggregation_mod * vec.x) + temp_x
