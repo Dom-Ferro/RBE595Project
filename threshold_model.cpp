@@ -34,13 +34,16 @@ struct GetRobotData : public CBuzzLoopFunctions::COperation {
       /* Set the mapping */
       m_vecRobotsTasks[t_vm->robot] = nTask;
 
+
+
       /* Get the current task */
       buzzobj_t tSwarm = BuzzGet(t_vm, "my_swarm");
       /* Make sure it's the type we expect (an integer) */
-      if(!buzzobj_isint(tTask)) {
-         LOGERR << str_robot_id << ": variable 'my_swarm' has wrong type " << buzztype_desc[tTask->o.type] << std::endl;
+      if(!buzzobj_isint(tSwarm)) {
+         LOGERR << str_robot_id << ": variable 'my_swarm' has wrong type " << buzztype_desc[tSwarm->o.type] << std::endl;
          return;
       }
+
       /* Get the value */
       int nSwarm = buzzobj_getint(tSwarm);
       /* Make sure its value is correct */
@@ -130,8 +133,7 @@ void CThresholdModel::PostStep() {
       for(int i = 0; i < GetNumRobots(); ++i) {
          m_cOutFile << GetSpace().GetSimulationClock() << "\t"
                     << i << "\t"
-                    << cGetRobotData.m_vecRobotsSwarms[i]
-                    << "\t"
+                    << cGetRobotData.m_vecRobotsSwarms[i] << "\t"
                     << cGetRobotData.m_vecRobotsTasks[i];
          for(int j = 0; j < 2; ++j) {
             m_cOutFile << "\t" << cGetRobotData.m_vecRobotsThresholds[i][j];
