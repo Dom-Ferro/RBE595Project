@@ -14,8 +14,9 @@
 # This function is executed once at init time
 function init() {
 	
-	GREEN = 1
 	BLUE = 0
+	GREEN = 1
+	EVIL = 2
 
 	HEX = 0
 	GRID = 1
@@ -31,6 +32,8 @@ function init() {
 	goal_x = 2.5
 	goal_y = -2.5
 	NUM_ROBOTS = 30
+
+	evil_guy = math.rng.uniform(NUM_ROBOTS)
 
 	alpha_attract = 1.01
 	alpha_repulse = 0.7
@@ -51,6 +54,7 @@ function init() {
 
 	blue = swarm.create(1) # swarm 0
 	green = swarm.create(2) # swarm 1
+	evil = swarm.create(3) # swarm 2
 	aggregation_mod = 1.0
 	aggregation_counter = 500
 
@@ -70,7 +74,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = CELL
+	type_flock = GRID
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -92,6 +96,7 @@ function init_hex() {
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
+	evil.select(id == evil_guy)
 
 	aggregation_counter = 200
 
@@ -99,9 +104,13 @@ function init_hex() {
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
 	}
-	else{
+	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+	}
+	if (evil.in()){
+		set_leds(255,0,0)
+		friends[string.tostring(id)] = EVIL
 	}
 	log("init hex")
 
@@ -123,15 +132,20 @@ function init_grid() {
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
+	evil.select(id == evil_guy)
 	angle_offset = 90.0
 
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
 	}
-	else{
+	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+	}
+	if (evil.in()){
+		set_leds(255,0,0)
+		friends[string.tostring(id)] = EVIL
 	}
 	
 	log("init grid")
@@ -151,14 +165,19 @@ function init_cell() {
 
 	blue.select(id % 10 >= 4)
 	green.select(id % 10 < 4)
+	evil.select(id == evil_guy)
 
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
 	}
-	else{
+	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+	}
+	if (evil.in()){
+		set_leds(255,0,0)
+		friends[string.tostring(id)] = EVIL
 	}
 
 	
@@ -182,6 +201,10 @@ function step() {
 		neighbors.broadcast(string.tostring(id),  GREEN)})
 	blue.exec(function(){
 		neighbors.broadcast(string.tostring(id),  BLUE)})
+	evil.exec(function(){
+		set_leds(255,0,0)
+	})
+
 
 	vec = {}
 	vec.x = 0.0
@@ -269,10 +292,6 @@ function step() {
 			}
 		
 		
-			if (blue.in()) {
-				goal_vec_x = 2 * goal_vec_x
-				goal_vec_y = 2 * goal_vec_y
-			}
 		}
 		else {
 			goal_x = -2.5
@@ -431,12 +450,17 @@ function step() {
 	#sx = sx + goal_vec_x
 	#sy = sy + goal_vec_y
 
-	#move along the vector
-	gotoc(sx, sy)
-		#scale the vector?
-
 	check_switch()
 	debug.print(switch_count)
+	#move along the vector
+	if (evil.in()) {
+		debug.print("mwahahahahahaha")
+		gotoc(0.0, 0.0)
+	} else {
+		gotoc(sx, sy)
+	}
+		#scale the vector?
+
 
 }
 
