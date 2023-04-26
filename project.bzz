@@ -37,6 +37,7 @@ function init() {
 	
 	count = 0
 	goal_mod = 100000000.0
+	force_cap = 5000.0
 
 	#distances
 	bb_dist = 30.0
@@ -272,12 +273,12 @@ function step() {
 		goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
 	}
 	else {
-		desire = 2.5
+		desire = 0.0
 		the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 		goal_x = 0.0
 		goal_y = 0.0
 
-		b = 1.0
+		b = 100.0
 
 		tx = goal_x*b - pose.position.x*b
 		ty = goal_y*b - pose.position.y*b
@@ -288,7 +289,7 @@ function step() {
 		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
 		#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
 		#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
-		#f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+		f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
 		
 		a = calc_goal_angle()
 		#log()
@@ -300,8 +301,8 @@ function step() {
 			}
 		
 		if (math.abs(ang-the_yaw) < 0.1745) {
-			goal_vec_x = base_speed * 0.5
-			goal_vec_y = ang-the_yaw #* base_speed
+			goal_vec_x = base_speed * (f / force_cap)
+			goal_vec_y = ang-the_yaw  * (f / force_cap)#* base_speed
 		} else {#(math.abs(angle-the_yaw) > 1.0) {
 			goal_vec_x = base_speed 
 			goal_vec_y = base_speed # (ang-the_yaw) * base_speed
@@ -483,6 +484,13 @@ function F(dist, desire, vision, alpha_attract, alpha_repulse) {
 	}
 	else
 		force = 0.0
+
+	#must get rid of magic numbers later
+	if (force > force_cap) {
+		force = force_cap
+	}else if (force < -force_cap) {
+		force = -force_cap
+	}
 	return force
 }
 
