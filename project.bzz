@@ -166,7 +166,6 @@ function step() {
 		goal_x = 0.0
 		goal_y = 0.0
 		goal_mod = 100000.0
-		aggregation_mod = 0.1
 	}
 	same_neighbors = get_kin() # neighbors.kin()
 	non_same = get_nonkin() # neighbors.nonkin()
@@ -283,13 +282,11 @@ function step() {
 		#goal_vec_x = f#goal_vec_x * 10.0
 		#goal_vec_y = rot * 10.0#goal_vec_y
 
-		if (count < 500){
-			goal_vec_x = 0.0
-			goal_vec_y = 0.0
+		if (count < 200){
 
 			goal_vec_x = 1.01^(goal_x - pose.position.x)# float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
 			goal_vec_y = 1.01^(goal_y - pose.position.y) #float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
-	
+
 		} else {
 
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
@@ -312,12 +309,24 @@ function step() {
 			goal_vec_x = base_speed * 0.5 * (f / force_cap)
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
-			if ((id == "28") or (id == 28)) {
+			if ((id == "4") or (id == 4)) {
 				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
+					
 		
 	}
+
+	if (count >= 200){
+
+		vec.x = vec.x / 4.0
+		vec.y = vec.y / 4.0
+
+	}
+
+
+	vec.x = vec.x + goal_vec_x
+	vec.y = vec.y + goal_vec_y
 	#goal_vec_x = 10* 1.01 ^()# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
 	#vec.x = (aggregation_mod * vec.x) + temp_x
@@ -343,21 +352,19 @@ function step() {
 	sy = vec.y
 	
 	#log("sx: ", sx, "sy: ", sy)
-	if (count < 500){
-		base_speed_mod = 1.0
-	} else {
-		base_speed_mod = 4.0
-	}
-	if ((vecsum > base_speed / base_speed_mod)) {
-		sx = (vec.x / vecsum) * (base_speed / base_speed_mod)
-		sy = (vec.y / vecsum) * (base_speed / base_speed_mod)
+
+	
+	
+	if ((vecsum > base_speed)) {
+		sx = (vec.x / vecsum) * base_speed#(base_speed / base_speed_mod)
+		sy = (vec.y / vecsum) * base_speed#(base_speed / base_speed_mod)
 	}
 	
-	sx = sx + goal_vec_x
-	sy = sy + goal_vec_y
+	#sx = sx + goal_vec_x
+	#sy = sy + goal_vec_y
 
 	#move along the vector
-	gotop(sx, sy)
+	gotoc(sx, sy)
 		#scale the vector?
 
 	check_switch()
@@ -488,12 +495,13 @@ function F(dist, desire, vision, alpha_attract, alpha_repulse) {
 	else
 		force = 0.0
 
-	#must get rid of magic numbers later
 	if (force > force_cap) {
 		force = force_cap
-	}else if (force < -force_cap) {
-		force = -force_cap
+	} else if (force < (-1.0 * force_cap)) {
+		force = force_cap * -1.0
 	}
+
+	
 	return force
 }
 
