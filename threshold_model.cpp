@@ -49,7 +49,7 @@ struct GetRobotData : public CBuzzLoopFunctions::COperation {
          return;
       }
       /* Set the mapping */
-      m_vecRobotsSwarms[t_vm->robot] = nTask;
+      m_vecRobotsSwarms[t_vm->robot] = nSwarm;
 
       /* Get the current thresholds */
       BuzzTableOpen(t_vm, "position");
@@ -81,7 +81,7 @@ struct GetRobotData : public CBuzzLoopFunctions::COperation {
    /* Task-robot mapping */
    std::map<int,float> m_vecRobotsTasks;
    /* Task-robot mapping */
-   std::map<int,float> m_vecRobotsSwarms;
+   std::map<int,int> m_vecRobotsSwarms;
    /* Robot-threshold mapping */
    std::map<int,std::vector<float> > m_vecRobotsThresholds;
 };
@@ -130,8 +130,8 @@ void CThresholdModel::PostStep() {
       for(int i = 0; i < GetNumRobots(); ++i) {
          m_cOutFile << GetSpace().GetSimulationClock() << "\t"
                     << i << "\t"
-                    << cGetRobotData.m_vecRobotsSwarms[i];
-                    << i << "\t"
+                    << cGetRobotData.m_vecRobotsSwarms[i]
+                    << "\t"
                     << cGetRobotData.m_vecRobotsTasks[i];
          for(int j = 0; j < 2; ++j) {
             m_cOutFile << "\t" << cGetRobotData.m_vecRobotsThresholds[i][j];

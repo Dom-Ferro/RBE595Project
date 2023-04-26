@@ -52,6 +52,7 @@ function init() {
 	blue = swarm.create(1) # swarm 0
 	green = swarm.create(2) # swarm 1
 	aggregation_mod = 1.0
+	my_swarm = 3
 
 	turn = 0
 
@@ -125,10 +126,12 @@ function init_grid() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else{
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 	}
 	
 	log("init grid")
@@ -151,10 +154,12 @@ function init_cell() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else{
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 	}
 
 	
