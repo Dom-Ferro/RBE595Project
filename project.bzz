@@ -37,7 +37,7 @@ function init() {
 	
 	count = 0
 	goal_mod = 100000000.0
-	force_cap = 5000.0
+	force_cap = 50000000.0
 
 	#distances
 	bb_dist = 30.0
@@ -274,53 +274,49 @@ function step() {
 	}
 	else {
 		desire = 0.0
-		the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
-		goal_x = 0.0
-		goal_y = 0.0
-
-		b = 100.0
-
-		tx = goal_x*b - pose.position.x*b
-		ty = goal_y*b - pose.position.y*b
-		d = math.sqrt((tx)^2 + (ty)^2)
-		ang = math.asin(ty/d)
-		rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
 		
-		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
-		#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
-		#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
-		f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
-		
-		a = calc_goal_angle()
-		#log()
-		#log("id: ", id, "angle: ", a)
-		#log()
-		if ((id == "12")){ #or (id == 12)) {
-				#log(a)
-
-			}
-		
-		if (math.abs(ang-the_yaw) < 0.1745) {
-			goal_vec_x = base_speed * (f / force_cap)
-			goal_vec_y = ang-the_yaw  * (f / force_cap)#* base_speed
-		} else {#(math.abs(angle-the_yaw) > 1.0) {
-			goal_vec_x = base_speed 
-			goal_vec_y = base_speed # (ang-the_yaw) * base_speed
-		#}else {
-		#	goal_vec_x = math.cos(angle-the_yaw)*base_speed* 0.5 #*(math.abs(tx)/tx)
-		#	goal_vec_y = math.sin(angle-the_yaw)*base_speed* 0.5 # *(math.abs(ty)/ty)
-		}
-
+	
+		#* base_speed
 		#goal_vec_x = (math.cos(a) * base_speed) #temp_x) - (math.sin(a) * temp_y)
 		#goal_vec_y = (math.sin(a) * base_speed) #temp_x) + (math.cos(a) * temp_y) 
 
 		#goal_vec_x = f#goal_vec_x * 10.0
 		#goal_vec_y = rot * 10.0#goal_vec_y
 
-		
-		if ((id == "28") or (id == 28)) {
-			log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+		if (count < 500){
+			goal_vec_x = 0.0
+			goal_vec_y = 0.0
+
+			goal_vec_x = 1.01^(goal_x - pose.position.x)# float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+			goal_vec_y = 1.01^(goal_y - pose.position.y) #float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+	
+		} else {
+
+			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
+			goal_x = 0.0
+			goal_y = 0.0
+
+			b = 100.0
+
+			tx = goal_x*b - pose.position.x*b
+			ty = goal_y*b - pose.position.y*b
+			d = math.sqrt((tx)^2 + (ty)^2)
+			ang = math.asin(ty/d)
+			rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
+			
+			#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
+			#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
+			#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
+			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+
+			goal_vec_x = base_speed * 0.5 * (f / force_cap)
+			goal_vec_y = the_yaw-ang  * (f / force_cap)
+
+			if ((id == "28") or (id == 28)) {
+				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+			}
 		}
+		
 	}
 	#goal_vec_x = 10* 1.01 ^()# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
@@ -332,8 +328,8 @@ function step() {
 	#if x is neg, y is pos, arc counterclockwise
 	#if both pos, spin clockwise
 	#if both neg, arc clockwise 
-	vec.x = goal_vec_x  #-base_speed * 0.2#goal_vec_x 
-	vec.y = goal_vec_y #base_speed* 0.2#-goal_vec_y
+	#vec.x = goal_vec_x  #-base_speed * 0.2#goal_vec_x 
+	#vec.y = goal_vec_y #base_speed* 0.2#-goal_vec_y
 	
 	#log(type_flock)
 	#log("rid: ", id, " vec x: ", vec.x, " vec y: ", vec.y, ", goal vec x: ", goal_vec_x,", goal vec y: ", goal_vec_y)
@@ -347,11 +343,18 @@ function step() {
 	sy = vec.y
 	
 	#log("sx: ", sx, "sy: ", sy)
-	if ((vecsum > base_speed)) {
-		sx = (vec.x / vecsum) * base_speed
-		sy = (vec.y / vecsum) * base_speed
+	if (count < 500){
+		base_speed_mod = 1.0
+	} else {
+		base_speed_mod = 4.0
+	}
+	if ((vecsum > base_speed / base_speed_mod)) {
+		sx = (vec.x / vecsum) * (base_speed / base_speed_mod)
+		sy = (vec.y / vecsum) * (base_speed / base_speed_mod)
 	}
 	
+	sx = sx + goal_vec_x
+	sy = sy + goal_vec_y
 
 	#move along the vector
 	gotop(sx, sy)
