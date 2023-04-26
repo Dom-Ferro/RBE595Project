@@ -147,7 +147,7 @@ $ argos3 -q box
     </box>
 	
     <light id ="light" 
-      position="0,0,0.5" 
+      position="-2.5,2.5,0.5" 
       orientation="0,0,0"
       color="yellow"
       intensity="100"

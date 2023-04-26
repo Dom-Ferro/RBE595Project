@@ -52,6 +52,7 @@ function init() {
 	blue = swarm.create(1) # swarm 0
 	green = swarm.create(2) # swarm 1
 	aggregation_mod = 1.0
+	aggregation_counter = 500
 
 	turn = 0
 
@@ -69,7 +70,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = HEX
+	type_flock = GRID
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -91,6 +92,8 @@ function init_hex() {
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
+
+	aggregation_counter = 200
 
 	if (blue.in()){
 		set_leds(0,0,255)
@@ -115,6 +118,8 @@ function init_grid() {
 
 	switch_count = 0
 	switch_thresh = 200
+
+	aggregation_counter = 1000
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
@@ -142,6 +147,7 @@ function init_cell() {
 
 	switch_count = 0
 	switch_thresh = 200
+	aggregation_counter = 500
 
 	blue.select(id % 10 >= 4)
 	green.select(id % 10 < 4)
@@ -162,9 +168,9 @@ function init_cell() {
 # This function is executed at each time step
 # The main loop is controller by ARGoS
 function step() {
-	if (count > 500){
-		goal_x = 0.0
-		goal_y = 0.0
+	if (count > aggregation_counter){
+		goal_x = -2.5
+		goal_y = 2.5
 		goal_mod = 100000.0
 	}
 	same_neighbors = get_kin() # neighbors.kin()
@@ -267,9 +273,34 @@ function step() {
 			goal_vec_y = 2 * goal_vec_y
 	}
 	else if(type_flock == GRID){
-		desire = 2.5
-		goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
-		goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+		if (count < aggregation_counter) {
+			desire = 2.5
+			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+			goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+		
+		}
+		else {
+			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
+			b = 100.0
+
+			tx = goal_x*b - pose.position.x*b
+			ty = goal_y*b - pose.position.y*b
+			d = math.sqrt((tx)^2 + (ty)^2)
+			ang = math.asin(ty/d)
+			rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
+			
+			#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
+			#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
+			#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
+			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+
+			goal_vec_x = base_speed * 0.5 * (f / force_cap)
+			goal_vec_y = the_yaw-ang  * (f / force_cap)
+
+			if ((id == "4") or (id == 4)) {
+				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+			}
+		}
 	}
 	else {
 		desire = 0.0
@@ -282,7 +313,7 @@ function step() {
 		#goal_vec_x = f#goal_vec_x * 10.0
 		#goal_vec_y = rot * 10.0#goal_vec_y
 
-		if (count < 200){
+		if (count < aggregation_counter){
 
 			goal_vec_x = 1.01^(goal_x - pose.position.x)# float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
 			goal_vec_y = 1.01^(goal_y - pose.position.y) #float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
@@ -317,7 +348,7 @@ function step() {
 		
 	}
 
-	if (count >= 200){
+	if (count >= aggregation_counter){
 
 		vec.x = vec.x / 4.0
 		vec.y = vec.y / 4.0
