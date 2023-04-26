@@ -273,7 +273,7 @@ function step() {
 	}
 	else {
 		desire = 2.5
-		the_yaw = float(pose.orientation["yaw"])# - (3.14159 / 2)
+		the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 		goal_x = 0.0
 		goal_y = 0.0
 
@@ -282,14 +282,13 @@ function step() {
 		tx = goal_x*b - pose.position.x*b
 		ty = goal_y*b - pose.position.y*b
 		d = math.sqrt((tx)^2 + (ty)^2)
-		angle = math.atan(ty, tx)
-		rotate = the_yaw + angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
-		temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))
-		temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))
+		ang = math.asin(ty/d)
+		rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
+		
 		#goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/goal_mod)
 		#temp_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse))*math.sin(float(pose.orientation["yaw"]))
 		#temp_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse))*math.cos(float(pose.orientation["yaw"]))
-		f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
+		#f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
 		
 		a = calc_goal_angle()
 		#log()
@@ -300,12 +299,12 @@ function step() {
 
 			}
 		
-		if (math.abs(angle-the_yaw) < 0.1745) {
+		if (math.abs(ang-the_yaw) < 0.1745) {
 			goal_vec_x = base_speed * 0.5
-			goal_vec_y = angle-the_yaw #* base_speed
+			goal_vec_y = ang-the_yaw #* base_speed
 		} else {#(math.abs(angle-the_yaw) > 1.0) {
-			goal_vec_x = base_speed *0.5
-			goal_vec_y = (angle-the_yaw) * base_speed
+			goal_vec_x = base_speed 
+			goal_vec_y = base_speed # (ang-the_yaw) * base_speed
 		#}else {
 		#	goal_vec_x = math.cos(angle-the_yaw)*base_speed* 0.5 #*(math.abs(tx)/tx)
 		#	goal_vec_y = math.sin(angle-the_yaw)*base_speed* 0.5 # *(math.abs(ty)/ty)
@@ -319,18 +318,21 @@ function step() {
 
 		
 		if ((id == "28") or (id == 28)) {
-			log("yaw: ", pose.orientation["yaw"], " angle: ", angle, "add: ", angle-the_yaw, " rot: ", rotate, " x: ", goal_vec_x, " y: ", goal_vec_y)
-
+			log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 		}
 	}
 	#goal_vec_x = 10* 1.01 ^()# * 0.5
 	#log("vec x: ", vec.x, "vec y: ", vec.y, ", goal vec x: ", goal_vec_x)
-	vec.x = (aggregation_mod * vec.x) + temp_x
+	#vec.x = (aggregation_mod * vec.x) + temp_x
 	#goal_vec_y =  10* 1.01^(goal_y - pose.position.y)# * 0.5
-	vec.y = (aggregation_mod * vec.y) + temp_y
+	#vec.y = (aggregation_mod * vec.y) + temp_y
 
-	vec.x = goal_vec_x
-	vec.y = -goal_vec_y
+	#if x is pos, y is neg, spin counterclockwise
+	#if x is neg, y is pos, arc counterclockwise
+	#if both pos, spin clockwise
+	#if both neg, arc clockwise 
+	vec.x = goal_vec_x  #-base_speed * 0.2#goal_vec_x 
+	vec.y = goal_vec_y #base_speed* 0.2#-goal_vec_y
 	
 	#log(type_flock)
 	#log("rid: ", id, " vec x: ", vec.x, " vec y: ", vec.y, ", goal vec x: ", goal_vec_x,", goal vec y: ", goal_vec_y)
