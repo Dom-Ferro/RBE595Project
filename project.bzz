@@ -57,6 +57,7 @@ function init() {
 	evil = swarm.create(3) # swarm 2
 	aggregation_mod = 1.0
 	aggregation_counter = 500
+	my_swarm = 3
 
 	turn = 0
 
@@ -103,10 +104,12 @@ function init_hex() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = BLUE
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
@@ -138,10 +141,12 @@ function init_grid() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
@@ -170,10 +175,12 @@ function init_cell() {
 	if (blue.in()){
 		set_leds(0,0,255)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 	}
 	else if (green.in()){
 		set_leds(0,255,0)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
@@ -368,8 +375,8 @@ function step() {
 		} else {
 
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
-			goal_x = 0.0
-			goal_y = 0.0
+			goal_x = -2.5
+			goal_y = 2.5
 
 			b = 100.0
 
@@ -525,6 +532,7 @@ function switch_swarm(){
 		green.join()
 		neighbors.broadcast(string.tostring(id), GREEN)
 		friends[string.tostring(id)] = GREEN
+		my_swarm = GREEN
 		set_leds(0, 255, 0)
 	}
 	else if(green.in()){
@@ -532,6 +540,7 @@ function switch_swarm(){
 		blue.join()
 		neighbors.broadcast(string.tostring(id), BLUE)
 		friends[string.tostring(id)] = BLUE
+		my_swarm = BLUE
 		set_leds(0, 0, 255)
 	}
 	else {
