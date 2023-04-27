@@ -33,7 +33,10 @@ function init() {
 	goal_y = -2.5
 	NUM_ROBOTS = 30
 
-	evil_guy = math.rng.uniform(NUM_ROBOTS)
+	evil_guy = 6 #math.rng.uniform(NUM_ROBOTS)
+	if(id == evil_guy){
+		log("evil guy is robot", evil_guy)
+	}
 
 	alpha_attract = 1.01
 	alpha_repulse = 0.7
@@ -113,7 +116,7 @@ function init_hex() {
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
-		friends[string.tostring(id)] = EVIL
+		# friends[string.tostring(id)] = EVIL
 		my_swarm = EVIL
 	}
 	log("init hex")
@@ -151,7 +154,7 @@ function init_grid() {
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
-		friends[string.tostring(id)] = EVIL
+		# friends[string.tostring(id)] = EVIL
 	}
 	
 	log("init grid")
@@ -186,7 +189,8 @@ function init_cell() {
 	}
 	if (evil.in()){
 		set_leds(255,0,0)
-		friends[string.tostring(id)] = EVIL
+		# friends[string.tostring(id)] = EVIL
+		my_swarm = EVIL
 	}
 
 	
@@ -361,6 +365,9 @@ function step() {
 
 			goal_vec_x = base_speed * 0.5 * (f / force_cap)
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
+			
+			vec.x = vec.x/4.0
+			vec.y = vec.y/4.0
 
 			if ((id == "4") or (id == 4)) {
 				#log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
@@ -408,26 +415,15 @@ function step() {
 			goal_vec_x = base_speed * 0.5 * (f / force_cap)
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
+			vec.x = vec.x/4.0
+			vec.y = vec.y/4.0
+
 			if ((id == "4") or (id == 4)) {
 				#log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
 					
 	}
-
-
-	if (count >= 1){# aggregation_counter){
-
-		vec.x = vec.x *2.0
-		vec.y = vec.y *2.0
-
-		if (blue.in()) {
-			vec.x = vec.x / 2.0
-			vec.y = vec.y / 2.0
-		}
-
-	}
-
 
 	vec.x = vec.x + goal_vec_x
 	vec.y = vec.y + goal_vec_y
@@ -549,8 +545,10 @@ function switch_swarm(){
 		log("uh oh, spaghettios, :-O")
 		set_leds(255, 0, 0)
 	}
+    
 	if (evil.in()){
 		my_swarm = EVIL
+        log("EVIL AND SWITCHING >:D")
 	}
 	
 }
