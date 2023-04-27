@@ -75,7 +75,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = HEX
+	type_flock = GRID
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -114,6 +114,7 @@ function init_hex() {
 	if (evil.in()){
 		set_leds(255,0,0)
 		friends[string.tostring(id)] = EVIL
+		my_swarm = EVIL
 	}
 	log("init hex")
 
@@ -273,10 +274,10 @@ function step() {
 	#calc_happy(vec)#, same_neighbors, non_same)
 
 	if (happiness < happy_thresh) {
-		debug.print(":-D")
+		#debug.print(":-D")
 	}
 	else {
-		debug.print(":-(")
+		#debug.print(":-(")
 	}
 	#debug.print(happiness)
 
@@ -362,7 +363,7 @@ function step() {
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
 			if ((id == "4") or (id == 4)) {
-				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+				#log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
 	}
@@ -387,6 +388,9 @@ function step() {
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			goal_x = -2.5
 			goal_y = 2.5
+			if (evil.in()){
+				goal_x = 2.5
+			}
 
 			b = 100.0
 
@@ -405,7 +409,7 @@ function step() {
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
 			if ((id == "4") or (id == 4)) {
-				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+				#log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
 					
@@ -429,7 +433,7 @@ function step() {
 	vec.y = vec.y + goal_vec_y
 
 	if ((id == "13") or (id == 13)) {
-		log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
+		#log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
 	}
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
@@ -455,14 +459,14 @@ function step() {
 
 
 	check_switch()
-	debug.print(switch_count)
+	#debug.print(switch_count)
 	#move along the vector
 	if (evil.in()) {
 		debug.print("mwahahahahahaha")
-		gotoc(0.0, 0.0)
-	} else {
-		gotoc(sx, sy)
-	}
+		#gotoc(0.0, 0.0)
+	} #else {
+	gotoc(sx, sy)
+	#}
 		#scale the vector?
 
 
@@ -540,9 +544,13 @@ function switch_swarm(){
 		my_swarm = BLUE
 		set_leds(0, 0, 255)
 	}
+	
 	else {
 		log("uh oh, spaghettios, :-O")
 		set_leds(255, 0, 0)
+	}
+	if (evil.in()){
+		my_swarm = EVIL
 	}
 	
 }
