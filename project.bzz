@@ -33,7 +33,7 @@ function init() {
 	goal_y = -2.5
 	NUM_ROBOTS = 30
 
-	evil_guy = 17 #math.rng.uniform(NUM_ROBOTS)
+	evil_guy = 32 #math.rng.uniform(NUM_ROBOTS)
 	if(id == evil_guy){
 		log("evil guy is robot", evil_guy)
 	}
@@ -78,7 +78,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = CELL
+	type_flock = GRID
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -137,8 +137,8 @@ function init_grid() {
 
 	aggregation_counter = 1000
 
-	blue.select(id % 2 == 0)
-	green.select(id % 2 == 1)
+	blue.select(id % 2 == 1)
+	green.select(id % 2 == 0)
 	evil.select(id == evil_guy)
 	angle_offset = 90.0
 
@@ -302,6 +302,7 @@ function step() {
 			d = math.sqrt((tx)^2 + (ty)^2)
 			ang = math.asin(ty/d)
 			rotate = ang - the_yaw #+ angle #calc_angle_offset(angle, the_yaw)# the_yaw - angle
+			
 
 		if (count < aggregation_counter ) {
 			desire = 0.0
@@ -344,8 +345,10 @@ function step() {
 		# pre flock
 		if (count < aggregation_counter) {
 			desire = 2.5
-			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
-			goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/100000000.0)
+			goal_vec_x = float(F((goal_x - pose.position.x), desire, 20000.0, 1.1, alpha_repulse)/10000000.0)
+			goal_vec_y = float(F((goal_y - pose.position.y), desire, 20000.0, 1.1, alpha_repulse)/10000000.0)
+			vec.x = vec.x
+			vec.y = vec.y
 		
 		}
 		else {
@@ -461,9 +464,10 @@ function step() {
 	if (evil.in()) {
 		debug.print("mwahahahahahaha")
 		#gotoc(0.0, 0.0)
-	} #else {
-	gotoc(sx, sy)
-	#}
+	} 
+	else {
+		gotoc(sx, sy)
+	}
 		#scale the vector?
 
 
