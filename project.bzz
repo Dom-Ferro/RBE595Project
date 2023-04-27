@@ -75,7 +75,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = HEX
+	type_flock = GRID
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -344,6 +344,9 @@ function step() {
 		}
 		else {
 		# flock time 
+			vec.x = vec.x/4.0
+			vec.y = vec.y/4.0
+
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			b = 100.0
 
@@ -384,6 +387,9 @@ function step() {
 
 		} else {
 
+			vec.x = vec.x/4.0
+			vec.y = vec.y/4.0
+
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			goal_x = -2.5
 			goal_y = 2.5
@@ -409,19 +415,6 @@ function step() {
 			}
 		}
 					
-	}
-
-
-	if (count >= 1){# aggregation_counter){
-
-		vec.x = vec.x *2.0
-		vec.y = vec.y *2.0
-
-		if (blue.in()) {
-			vec.x = vec.x / 2.0
-			vec.y = vec.y / 2.0
-		}
-
 	}
 
 
