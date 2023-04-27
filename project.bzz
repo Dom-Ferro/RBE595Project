@@ -33,7 +33,7 @@ function init() {
 	goal_y = -2.5
 	NUM_ROBOTS = 30
 
-	evil_guy = 6 #math.rng.uniform(NUM_ROBOTS)
+	evil_guy = 17 #math.rng.uniform(NUM_ROBOTS)
 	if(id == evil_guy){
 		log("evil guy is robot", evil_guy)
 	}
@@ -78,7 +78,7 @@ function init() {
 
 	angle_offset = 60.0
 
-	type_flock = GRID
+	type_flock = CELL
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -307,14 +307,15 @@ function step() {
 			desire = 0.0
 			the_yaw = (3.14159 ) - float(pose.orientation["yaw"]) 
 			if (green.in()){
-				vec.x = vec.x *2.0
-				vec.y = vec.y *2.0
+				vec.x = vec.x *4.0
+				vec.y = vec.y *4.0
 				desire = 5.0 + ((count%100)/10)
 				f = float(F(d, desire, 20000.0, 1.001, 0.99999999))
+
 			}
 			else{
-				vec.x = vec.x / 2.0
-				vec.y = vec.y / 2.0
+				vec.x = vec.x / 1.0
+				vec.y = vec.y / 1.0
 				desire = 3.0
 				f = float(F(d, desire, 20000.0, 1.001, 0.9999999999))
 			}
@@ -322,12 +323,12 @@ function step() {
 		else {
 			f = float(F(d, desire, 20000.0, 1.1, alpha_repulse))
 			if(green.in()){
-				vec.x = vec.x/7.5
-				vec.y = vec.y/7.5
+				vec.x = vec.x
+				vec.y = vec.y
 			}
 			else{
-				vec.x = vec.x/150.0
-				vec.y = vec.y/150.0
+				vec.x = vec.x/2.0
+				vec.y = vec.y/2.0
 			}
 		}
 
