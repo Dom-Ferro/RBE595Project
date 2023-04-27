@@ -33,7 +33,11 @@ function init() {
 	goal_y = -2.5
 	NUM_ROBOTS = 30
 
+	HAVE_EVIL_GUY = 1
 	evil_guy = math.rng.uniform(NUM_ROBOTS)
+	if (id == evil_guy){
+		log("evil guy is robot number:", evil_guy)
+	}
 
 	alpha_attract = 1.01
 	alpha_repulse = 0.7
@@ -74,8 +78,12 @@ function init() {
 	}
 
 	angle_offset = 60.0
+	
+	if (HAVE_EVIL_GUY == 1){
+		evil.select(id == evil_guy)
+	}
 
-	type_flock = HEX
+	type_flock = CELL
 
 	if (type_flock == HEX) {
 		init_hex()
@@ -97,7 +105,6 @@ function init_hex() {
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
-	evil.select(id == evil_guy)
 
 	aggregation_counter = 200
 
@@ -135,7 +142,6 @@ function init_grid() {
 
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
-	evil.select(id == evil_guy)
 	angle_offset = 90.0
 
 	if (blue.in()){
@@ -168,8 +174,6 @@ function init_cell() {
 	switch_thresh = 400
 	aggregation_counter = 1000
 
-	
-	evil.select(id == evil_guy)
 	blue.select(id % 2 == 0)
 	green.select(id % 2 == 1)
 
@@ -196,8 +200,8 @@ function init_cell() {
 # The main loop is controller by ARGoS
 function step() {
 	if (count > aggregation_counter){
-		goal_x = -3.0
-		goal_y = 3.0
+		goal_x = -2.5
+		goal_y = 2.5
 	}
 	same_neighbors = get_kin() # neighbors.kin()
 	non_same = get_nonkin() # neighbors.nonkin()
@@ -218,7 +222,7 @@ function step() {
 	vec.y = 0.0
 
 	if (type_flock == GRID){
-		debug.print(switch_count)
+		# debug.print(switch_count)
 		if(switch_count > switch_thresh){
 			switch_swarm()
 			switch_count = 0
@@ -273,10 +277,10 @@ function step() {
 	#calc_happy(vec)#, same_neighbors, non_same)
 
 	if (happiness < happy_thresh) {
-		debug.print(":-D")
+		# debug.print(":-D")
 	}
 	else {
-		debug.print(":-(")
+		# debug.print(":-(")
 	}
 	#debug.print(happiness)
 
@@ -362,7 +366,7 @@ function step() {
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
 			if ((id == "4") or (id == 4)) {
-				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+				# log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
 	}
@@ -405,7 +409,7 @@ function step() {
 			goal_vec_y = the_yaw-ang  * (f / force_cap)
 
 			if ((id == "4") or (id == 4)) {
-				log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
+				# log("yaw: ", pose.orientation["yaw"], " angle: ", ang, "add: ", ang-the_yaw, " goal_vec_y: ", goal_vec_y, ", goal vec x: ", goal_vec_x)
 			}
 		}
 					
@@ -429,7 +433,7 @@ function step() {
 	vec.y = vec.y + goal_vec_y
 
 	if ((id == "13") or (id == 13)) {
-		log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
+		# log("yaw: ", pose.orientation["yaw"], " angle: ", ang, ", goal vec x: ", goal_vec_x, " goal_vec_y: ", goal_vec_y, " x: ", vec.x, " y: ", vec.y)
 	}
 
 	vecsum = math.abs(vec.x) + math.abs(vec.y)
@@ -455,7 +459,7 @@ function step() {
 
 
 	check_switch()
-	debug.print(switch_count)
+	# debug.print(switch_count)
 	#move along the vector
 	if (evil.in()) {
 		debug.print("mwahahahahahaha")
@@ -543,6 +547,10 @@ function switch_swarm(){
 	else {
 		log("uh oh, spaghettios, :-O")
 		set_leds(255, 0, 0)
+	}
+    if (evil.in()){
+		set_leds(255, 0, 0)
+        my_swarm = EVIL
 	}
 	
 }
@@ -632,7 +640,7 @@ function check_cell_switch() {
 	}
 	#debug.print("num same: ", num_same, " num_diff: ", num_diff, " percent_same: ", percent_same, " sum: ", sum)
 
-	if ((percent_same < 0.1) and (blue.in()))
+	if ((percent_same < 0.1) and (blue.in()) and (evil.in()== false))
 		switch_count = switch_count + 1
 	else if (switch_count > 0){
 		switch_count = switch_count - 1
